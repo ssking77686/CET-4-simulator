@@ -1627,107 +1627,202 @@ function downloadDOCX() {
 }
 
 function downloadMD() {
-  if (!EXAM.results) { alert('请先完成考试'); return; }
+      if (!EXAM.results) { alert('请先完成考试'); return; }
 
-  const r = EXAM.results;
-  const paper = EXAM.paper;
-  const ans = EXAM.answers;
+      const r = EXAM.results;
+      const paper = EXAM.paper;
+      const ans = EXAM.answers;
 
-  // ---------- build question lookup map ----------
-  const qMap = {};
-  if (paper.listening && paper.listening.sections) {
-    for (const ls of paper.listening.sections) {
-      const lqs = extractQuestions(ls.text);
-      for (const q of lqs) qMap[q.num] = { stem: q.stem, options: q.options, type: 'listening', section: ls.name };
-    }
-  }
-  let readSections = null;
-  if (EXAM._readData && EXAM._readData.sections) {
-    readSections = EXAM._readData.sections;
-    for (const sec of readSections) {
-      if (sec.type === 'cloze') {
-        for (const q of (sec.questions || [])) qMap[q.num] = { stem: q.stem, options: [], type: 'cloze' };
-      } else if (sec.type === 'match') {
-        for (const q of (sec.questions || [])) qMap[q.num] = { stem: q.stem, options: [], type: 'match' };
+      // ---------- build question lookup map with sentence context ----------
+      const qMap = {};
+      function buildClozeContext(passage) {
+        const ctx = {};
+        if (!passage) return ctx;
+        const sents = passage.split(/(?<=[.!?])\s+/);
+        for (const s of sents) {
+          const nums = s.match(/\(?(2[6-9]|3[0-5])\)?/g);
+          if (nums) for (const n of nums) ctx[n.replace(/[()]/g, '')] = s.trim();
+        }
+        return ctx;
+      }
+
+      if (paper.listening && paper.listening.sections) {
+        for (const ls of paper.listening.sections) {
+          const lqs = extractQuestions(ls.text);
+          for (const q of lqs) qMap[q.num] = { stem: q.stem, options: q.options, type: 'listening', section: ls.name };
+        }
+      }
+      let readSections = null;
+      if (EXAM._readData && EXAM._readData.sections) {
+        readSections = EXAM._readData.sections;
+        for (const sec of readSections) {
+          if (sec.type === 'cloze') {
+            const clozeCtx = buildClozeContext(sec.passage || '');
+            for (const q of (sec.questions || [])) {
+              qMap[q.num] = { stem: clozeCtx[q.num] || ('第 ' + q.num + ' 空'), options: [], type: 'cloze' };
+            }
+          } else if (sec.type === 'match') {
+            for (const q of (sec.questions || [])) qMap[q.num] = { stem: q.stem, options: [], type: 'match' };
+          } else {
+            for (const q of (sec.questions || [])) qMap[q.num] = { stem: q.stem, options: q.options || [], type: 'careful' };
+          }
+        }
+      }
+
+      function fmtQ(d) {
+        const qi = qMap[d.num];
+        let lines = [];
+        if (qi && qi.stem && qi.type === 'cloze') {
+          const ctx = qi.stem.replace(new RegExp('\\(?' + d.num + '\\)?', 'g'), '___');
+          lines.push('Q' + d.num + '. ' + ctx);
+        } else if (qi && qi.stem) {
+          lines.push('Q' + d.num + '. ' + qi.stem);
+        } else {
+          lines.push('Q' + d.num + '.');
+        }
+        if (qi && qi.options && qi.options.length > 0) {
+          lines.push('    ' + qi.options.map(function(o, i) { return String.fromCharCode(65+i) + ') ' + o; }).join('  '));
+        }
+        var status = d.ok === true ? '✓' : d.ok === false ? '✗' : '?';
+        lines.push('    学生: ' + (d.user || '(空)') + ' | 正确: ' + d.correct + ' | ' + status);
+        return lines.join('\n');
+      }
+
+      // ---- Reading sections with FULL content ----
+      var readSecMD = '';
+      if (readSections) {
+        for (var si = 0; si < readSections.length; si++) {
+          var sec = readSections[si];
+          readSecMD += '\n### ' + sec.title + '\n';
+          if (sec.type === 'cloze') {
+            readSecMD += '\n**原文（含空）:**\n' + (sec.passage || '') + '\n';
+            if (sec.wordBank && sec.wordBank.length > 0) {
+              readSecMD += '\n**备选词（15选10）:** ' + sec.wordBank.map(function(b) { return b.l + ') ' + b.w; }).join('  ') + '\n';
+            }
+          } else if (sec.type === 'match') {
+            readSecMD += '\n**段落:**\n' + (sec.paragraphs || []).map(function(p) { return p.l + ') ' + p.t; }).join('\n') + '\n';
+            readSecMD += '\n**题干:**\n' + (sec.questions || []).map(function(q) { return 'Q' + q.num + '. ' + q.stem; }).join('\n') + '\n';
+          } else if (sec.type === 'careful') {
+            readSecMD += '\n**原文:**\n' + (sec.passage || '') + '\n';
+          }
+        }
+      }
+
+      // ---- Reading answer details ----
+      var readDetailMD = '';
+      if (r.hasKey && r.rDetails.length > 0) {
+        readDetailMD = '\n### 答题详情\n';
+        var clozeQs = r.rDetails.filter(function(d) { return qMap[d.num] && qMap[d.num].type === 'cloze'; });
+        var matchQs = r.rDetails.filter(function(d) { return qMap[d.num] && qMap[d.num].type === 'match'; });
+        var carefulQs = r.rDetails.filter(function(d) { return qMap[d.num] && qMap[d.num].type === 'careful'; });
+        var otherQs = r.rDetails.filter(function(d) { return !qMap[d.num]; });
+        if (clozeQs.length > 0) readDetailMD += '\n**选词填空答题卡:**\n' + clozeQs.map(fmtQ).join('\n') + '\n';
+        if (matchQs.length > 0) readDetailMD += '\n**段落匹配答题卡:**\n' + matchQs.map(fmtQ).join('\n') + '\n';
+        if (carefulQs.length > 0) readDetailMD += '\n**仔细阅读答题卡:**\n' + carefulQs.map(fmtQ).join('\n') + '\n';
+        if (otherQs.length > 0) readDetailMD += '\n**其他:**\n' + otherQs.map(fmtQ).join('\n') + '\n';
+        readDetailMD += '\n### 阅读统计\n- 正确: ' + r.rCorrect + ' / ' + r.rTotal + '\n- 正确率: ' + Math.round(r.rCorrect/r.rTotal*100) + '%\n';
+      } else if (r.rDetails.length > 0) {
+        readDetailMD = '\n### 答题详情（无标准答案，仅记录你的作答）\n' + r.rDetails.map(fmtQ).join('\n') + '\n';
+      }
+
+      // ---- Listening full text + answer details ----
+      var listenRawMD = '';
+      if (r.hasAudio && paper.listening && paper.listening.sections) {
+        listenRawMD = '\n### 听力原文\n';
+        for (var lsi = 0; lsi < paper.listening.sections.length; lsi++) {
+          listenRawMD += '\n**' + paper.listening.sections[lsi].name + '**\n' + paper.listening.sections[lsi].text + '\n';
+        }
+      }
+      var listenMD = '';
+      if (r.hasAudio && r.hasKey) {
+        listenMD = '\n### 答题详情\n' + r.lDetails.map(fmtQ).join('\n') + '\n\n### 听力统计\n- 正确: ' + r.lCorrect + ' / ' + r.lTotal + '\n- 正确率: ' + Math.round(r.lCorrect/r.lTotal*100) + '%\n';
+      } else if (r.hasAudio) {
+        listenMD = '\n### 答题详情（无标准答案，仅记录你的作答）\n' + r.lDetails.map(fmtQ).join('\n') + '\n';
+      }
+
+      // ---- Grammar error summaries ----
+      var wErrDetail = '';
+      if (r.wErrors.length > 0) {
+        wErrDetail = '| 序号 | 类型 | 说明 |\n|------|------|------|\n' + r.wErrors.map(function(e, i) { return '| ' + (i+1) + ' | ' + e.type + ' | ' + e.msg + ' |'; }).join('\n');
+        var wCounts = {};
+        for (var wi = 0; wi < r.wErrors.length; wi++) { var wt = r.wErrors[wi].type; wCounts[wt] = (wCounts[wt] || 0) + 1; }
+        wErrDetail += '\n\n**错误类型分布:**\n';
+        for (var wk in wCounts) wErrDetail += '- ' + wk + ': ' + wCounts[wk] + ' 处\n';
       } else {
-        for (const q of (sec.questions || [])) qMap[q.num] = { stem: q.stem, options: q.options || [], type: 'careful' };
+        wErrDetail = '未检测到明显语法错误。';
       }
-    }
-  }
-  function fmtQ(d) {
-    const qi = qMap[d.num];
-    let lines = [];
-    const stem = (qi && qi.stem) ? qi.stem : '';
-    if (stem && stem !== '第 ' + d.num + ' 空') lines.push('Q' + d.num + '. ' + stem);
-    else lines.push('Q' + d.num + '.');
-    if (qi && qi.options && qi.options.length > 0) {
-      lines.push('    ' + qi.options.map(function(o, i) { return String.fromCharCode(65+i) + ') ' + o; }).join('  '));
-    }
-    var status = d.ok === true ? '✓' : d.ok === false ? '✗' : '?';
-    lines.push('    学生: ' + (d.user || '(空)') + ' | 正确: ' + d.correct + ' | ' + status);
-    return lines.join('\n');
-  }
 
-  var readSecMD = '';
-  if (readSections) {
-    for (var si = 0; si < readSections.length; si++) {
-      var sec = readSections[si];
-      readSecMD += '\n### ' + sec.title + '\n';
-      if (sec.type === 'cloze') {
-        readSecMD += '\n**原文:** ' + (sec.passage || '') + '\n';
-        if (sec.wordBank && sec.wordBank.length > 0) {
-          readSecMD += '\n**备选词:** ' + sec.wordBank.map(function(b) { return b.l + ') ' + b.w; }).join('  ') + '\n';
-        }
-      } else if (sec.type === 'match') {
-        if (sec.paragraphs && sec.paragraphs.length > 0) {
-          readSecMD += '\n**段落:**\n' + sec.paragraphs.map(function(p) { return p.l + ') ' + p.t; }).join('\n') + '\n';
-        }
-      } else if (sec.type === 'careful') {
-        readSecMD += '\n**原文:** ' + (sec.passage || '') + '\n';
+      var tErrDetail = '';
+      if (r.tErrors.length > 0) {
+        tErrDetail = '| 序号 | 类型 | 说明 |\n|------|------|------|\n' + r.tErrors.map(function(e, i) { return '| ' + (i+1) + ' | ' + e.type + ' | ' + e.msg + ' |'; }).join('\n');
+      } else {
+        tErrDetail = '未检测到明显语法错误。';
       }
-    }
-  }
 
-  var readDetailMD = '';
-  if (r.hasKey && r.rDetails.length > 0) {
-    readDetailMD = '\n### 答题详情\n';
-    var clozeQs = r.rDetails.filter(function(d) { return qMap[d.num] && qMap[d.num].type === 'cloze'; });
-    var matchQs = r.rDetails.filter(function(d) { return qMap[d.num] && qMap[d.num].type === 'match'; });
-    var carefulQs = r.rDetails.filter(function(d) { return qMap[d.num] && qMap[d.num].type === 'careful'; });
-    var otherQs = r.rDetails.filter(function(d) { return !qMap[d.num]; });
-    if (clozeQs.length > 0) readDetailMD += '\n**选词填空:**\n' + clozeQs.map(fmtQ).join('\n') + '\n';
-    if (matchQs.length > 0) readDetailMD += '\n**段落匹配:**\n' + matchQs.map(fmtQ).join('\n') + '\n';
-    if (carefulQs.length > 0) readDetailMD += '\n**仔细阅读:**\n' + carefulQs.map(fmtQ).join('\n') + '\n';
-    if (otherQs.length > 0) readDetailMD += '\n**其他:**\n' + otherQs.map(fmtQ).join('\n') + '\n';
-    readDetailMD += '\n### 统计\n- 正确: ' + r.rCorrect + ' / ' + r.rTotal + '\n- 正确率: ' + Math.round(r.rCorrect/r.rTotal*100) + '%\n';
-  } else if (r.rDetails.length > 0) {
-    readDetailMD = '\n### 答题详情（无答案，仅记录）\n' + r.rDetails.map(fmtQ).join('\n') + '\n';
-  }
+      let md = `# SYSTEM INSTRUCTION — 请先阅读
 
-  var listenMD = '';
-  if (r.hasAudio && r.hasKey) {
-    listenMD = '\n### 答题详情\n' + r.lDetails.map(fmtQ).join('\n') + '\n\n### 统计\n- 正确: ' + r.lCorrect + ' / ' + r.lTotal + '\n- 正确率: ' + Math.round(r.lCorrect/r.lTotal*100) + '%\n';
-  } else if (r.hasAudio) {
-    listenMD = '\n### 答题详情（无答案，仅记录）\n' + r.lDetails.map(fmtQ).join('\n') + '\n';
-  }
+## 你的身份
 
-  let md = `# SYSTEM INSTRUCTION — 请先阅读
-
-你是一位经验丰富的中国大学英语四级（CET-4）备考辅导专家。请基于下方考试数据，为学生生成一份详细的成绩分析报告。
+你是一位经验丰富的中国大学英语四级（CET-4）备考辅导专家，已经辅导过上百名学生通过四级。你熟悉四级的评分标准、各题型的命题规律，以及中国学生在英语学习中常见的薄弱环节。
 
 ## 你的任务
-1. 逐题型分析学生的得分情况和薄弱环节
-2. 对写作和翻译中的语法错误进行分类统计和讲解，每种类型至少举1个具体例句说明
-3. 针对听力/阅读错题，分析可能的出错原因（词汇量？理解偏差？逻辑判断？）
-4. 给出具体可操作的备考建议（不要泛泛而谈，要具体到题型和方法）
-5. 预测如果按照你的建议针对性复习 1 周，预计能提分多少
+
+请基于下方的学生考试数据，生成一份详细的成绩分析报告。报告需包含以下五个部分：
+
+### 1. 总览分析
+- 根据总分（710分制）判断学生当前水平：425分以下 = 需要重点突破，425-500分 = 有通过基础但需巩固，500分以上 = 争取高分
+- 指出得分率最高和最低的题型，分析整体强项和短板
+- 关注各 Section 的实际用时，判断是否存在时间分配不合理的问题
+
+### 2. 逐题型深度分析
+
+**写作（Writing）：**
+- 对照题目，评价文章是否切题、结构是否完整（开头-主体-结尾）
+- 指出最严重的 3-5 个语法或表达问题，按严重程度排列
+- 评估词汇和句式多样性：是否过度使用简单句和基础词汇
+
+**翻译（Translation）：**
+- 对照中文原文，检查是否漏译、错译关键信息点
+- 指出最明显的 3-5 处英文表达问题
+- 评估是否恰当处理了中文特有的表达方式（如四字格、无主语句等）
+
+**阅读（Reading）：**
+- 选词填空：分析错误是否集中在特定词性（动词/名词/形容词/副词），判断是词汇量问题还是语法分析能力不足。题干中已经给出了每个空所在的句子上下文
+- 段落匹配：统计错误率，分析错误是否因为对段落主旨理解有偏差，或是被干扰信息误导
+- 仔细阅读：逐题分析错因——是没看懂原文关键句？看懂了但选项理解有偏差？还是纯词汇障碍？对每道错题，具体指出是哪个词、哪个句子没理解对
+
+**听力（Listening）（如有）：**
+- 分析错误是否集中在某个 Section（新闻/长对话/短文）
+- 判断主要障碍是语音辨识、词汇量、还是信息加工速度
+
+### 3. 语法错误分类讲解
+- 将写作和翻译中的语法错误归类统计（冠词 / 主谓一致 / 时态 / 搭配 / 拼写 / Chinglish）
+- 每种错误类型至少举 1 个具体例句，格式：**学生原文** → **正确写法**，并简要说明原因
+- 某类错误出现 3 次以上，标注为"高频错误"
+
+### 4. 备考建议
+- 精确到题型和方法的建议，不要泛泛而谈。范例：
+  - 不要说"多背单词"，要说"针对选词填空高频出错的动词，整理常见动词+介词搭配表，每天背 10 组"
+  - 不要说"多练听力"，要说"每天做 1 篇 Section C 短文听写：逐句暂停写出内容，再对照原文纠错"
+- 按优先级排列，最多 5 条。每条标注每天预估时间和预计见效周期
+
+### 5. 提分预测
+- 如果学生严格按照你的建议复习 1 周（每天 2-3 小时），预测各题型能提多少分
+- 给出 1 周后的预期总分范围，以及通过四级的概率
 
 ## 输出格式要求
-- 用中文输出，关键术语保留英文
-- 先总览后分题型，结构清晰
-- 每个错误类型给出 1 个具体例句纠正（学生原文 → 正确写法）
-- 建议按优先级排序，最多 5 条
-- 语气：老师对学生的鼓励式，但要直击问题
+- 全部用中文输出，关键术语保留英文（如 S-V agreement、Chinglish 等）
+- 先总览后分题型，使用清晰的标题层级
+- 每个语法错误纠正格式：学生原文 → 正确写法 + 一句话原因
+- 建议按优先级从高到低排列
+- 语气：直接、专业、像老师对学生的谈话。不要虚假鼓励，不要回避问题
+
+## 禁止事项
+- 不要编造数据中没有的信息
+- 不要给出"多听多读多写"这类无法执行的空话
+- 不要只批评不给方案——每条批评后面必须跟具体的改进方法
+- 不要在分析错题时说"可能是粗心"——永远假设是能力不足导致的错误
+- 不要说"你可以的""加油"等没有信息量的鼓励
 
 ---
 
@@ -1735,38 +1830,40 @@ function downloadMD() {
 
 ## 基本概况
 - 考试日期: ${new Date().toLocaleDateString('zh-CN')}
-- 试卷来源: PDF导入
-- 是否提供标准答案: ${r.hasKey ? '是' : '否（听力/阅读无法自动判分）'}
+- 试卷来源: PDF 导入
+- 是否提供标准答案: ${r.hasKey ? '是（听力/阅读可自动判分）' : '否（听力/阅读无法自动判分，写作和翻译仅有语法检测参考分）'}
 - 是否包含听力: ${r.hasAudio ? '是' : '否（跳过）'}
-- 各Section用时: 写作${Math.floor(EXAM.elapsed.writing/60)}分${EXAM.elapsed.writing%60}秒 / 听力${EXAM.hasAudio ? Math.floor(EXAM.elapsed.listening/60)+'分'+EXAM.elapsed.listening%60+'秒' : '跳过'} / 阅读${Math.floor(EXAM.elapsed.reading/60)}分${EXAM.elapsed.reading%60}秒 / 翻译${Math.floor(EXAM.elapsed.translation/60)}分${EXAM.elapsed.translation%60}秒
+- 各 Section 实际用时: 写作 ${Math.floor(EXAM.elapsed.writing/60)} 分 ${EXAM.elapsed.writing%60} 秒 / 听力 ${EXAM.hasAudio ? Math.floor(EXAM.elapsed.listening/60)+' 分 '+EXAM.elapsed.listening%60+' 秒' : '跳过'} / 阅读 ${Math.floor(EXAM.elapsed.reading/60)} 分 ${EXAM.elapsed.reading%60} 秒 / 翻译 ${Math.floor(EXAM.elapsed.translation/60)} 分 ${EXAM.elapsed.translation%60} 秒
 ${r.hasKey ? `
 ## 得分总览
-- 总分: ${r.total710} / 710 (${r.total710 >= 425 ? '通过' : '未通过'})
-- 写作: ${r.w710} / 106.5 (15分制: ${r.writing15}/15)
-- 听力: ${r.hasAudio ? r.l710 + ' / 248.5 (正确' + r.lCorrect + '/' + r.lTotal + ')' : '跳过'}
-- 阅读: ${r.r710} / 248.5 (正确${r.rCorrect}/${r.rTotal})
-- 翻译: ${r.t710} / 106.5 (15分制: ${r.translation15}/15)
+- 总分: ${r.total710} / 710 (${r.total710 >= 500 ? '良好' : r.total710 >= 425 ? '通过' : '未通过'}，及格线 425)
+- 写作: ${r.w710} / 106.5 (15 分制: ${r.writing15} / 15)
+- 听力: ${r.hasAudio ? r.l710 + ' / 248.5 (正确 ' + r.lCorrect + ' / ' + r.lTotal + ')' : '跳过'}
+- 阅读: ${r.r710} / 248.5 (正确 ${r.rCorrect} / ${r.rTotal})
+- 翻译: ${r.t710} / 106.5 (15 分制: ${r.translation15} / 15)
 ` : `
 ## 得分说明
-⚠ 未提供标准答案，听力/阅读无法自动判分。以下仅展示写作和翻译的语法检测参考分数。
-- 写作参考分 (15分制): ${r.writing15}/15
-- 翻译参考分 (15分制): ${r.translation15}/15
+未提供标准答案，听力/阅读无法自动判分。以下仅展示写作和翻译的语法检测参考分数。
+- 写作参考分 (15 分制): ${r.writing15} / 15
+- 翻译参考分 (15 分制): ${r.translation15} / 15
 `}
 ## 写作 (Writing)
 
-### 题目
-${paper.writing.prompt || '(未识别)'}
+### 题目原文
+${paper.writing.prompt || '(未识别到写作题目)'}
 
 ### 学生作文全文
 \`\`\`
 ${ans.writing || '(未作答)'}
 \`\`\`
 
+字数: ${countWords(ans.writing)} 词（要求 120-180 词）
+
 ### 语法检测结果 (共 ${r.wErrors.length} 处)
-${r.wErrors.length > 0 ? '| 序号 | 类型 | 说明 |\n|------|------|------|\n' + r.wErrors.map((e, i) => `| ${i+1} | ${e.type} | ${e.msg} |`).join('\n') : '未检测到明显语法错误。'}
+${wErrDetail}
 
 ## 听力 (Listening)
-${r.hasAudio ? listenMD : '听力部分已跳过（未上传音频）。'}
+${r.hasAudio ? listenRawMD + '\n' + listenMD : '听力部分已跳过（未上传音频文件）。'}
 
 ## 阅读 (Reading)
 ${readSecMD}
@@ -1774,25 +1871,28 @@ ${readDetailMD}
 
 ## 翻译 (Translation)
 
-### 原文
-${paper.translation.zh || '(未识别)'}
+### 中文原文
+${paper.translation.zh || '(未识别到翻译原文)'}
 
 ### 学生译文全文
 \`\`\`
 ${ans.translation || '(未作答)'}
 \`\`\`
 
+字数: ${countWords(ans.translation)} 词
+
 ### 语法检测结果 (共 ${r.tErrors.length} 处)
-${r.tErrors.length > 0 ? '| 序号 | 类型 | 说明 |\n|------|------|------|\n' + r.tErrors.map((e, i) => `| ${i+1} | ${e.type} | ${e.msg} |`).join('\n') : '未检测到明显语法错误。'}
+${tErrDetail}
 
 ---
 
-> 以上数据由 CET-4 全真模拟考试平台自动生成。请根据这些数据为学生提供详细的成绩分析和备考建议。
+> 以上数据由 CET-4 全真模拟考试平台 (v1.0.0) 自动生成。请你根据 SYSTEM INSTRUCTION 中的要求，为学生输出一份完整的成绩分析报告。
 `;
 
-  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
-  saveFile(blob, 'CET4_详细报告_' + new Date().toISOString().slice(0,10) + '.md');
-}// INIT
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+      saveFile(blob, 'CET4_详细报告_' + new Date().toISOString().slice(0,10) + '.md');
+    }
+// INIT
 // ============================================================================
 function escapeHtml(str) {
   if (!str) return '';
