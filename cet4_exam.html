@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CET-4 全真模拟考试</title>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+<style>
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Times New Roman", "SimSun", serif; background: #f1f5f9; color: #1e293b; line-height: 1.6; min-height: 100vh; }
+a { color: #2563eb; }
+
+/* ========== TOP BAR ========== */
+.topbar { background: #0f172a; color: #fff; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
+.topbar-brand { font-size: 16px; font-weight: 700; letter-spacing: .5px; display: flex; align-items: center; gap: 8px; }
+.topbar-nav { display: flex; gap: 2px; }
+.topbar-nav .ns { padding: 8px 16px; border-radius: 6px; font-size: 12px; color: #64748b; border: none; background: none; cursor: pointer; transition: .2s; }
+.topbar-nav .ns.active { background: rgba(255,255,255,.12); color: #fff; font-weight: 600; }
+.topbar-nav .ns.done { color: #4ade80; }
+
+/* ========== CONTAINER ========== */
+.container { max-width: 960px; margin: 0 auto; padding: 28px 20px; }
+
+/* ========== SCREENS ========== */
+.scr { display: none; }
+.scr.active { display: block; }
+
+/* ========== CARD ========== */
+.card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px 28px; margin-bottom: 18px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+.card h2 { font-size: 17px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.card .sub { font-size: 12px; color: #64748b; margin-bottom: 18px; }
+
+/* ========== BUTTONS ========== */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: .15s; text-decoration: none; }
+.btn:active { transform: scale(.97); }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-outline { background: #fff; color: #475569; border: 1.5px solid #cbd5e1; }
+.btn-outline:hover { border-color: #94a3b8; background: #f8fafc; }
+.btn-success { background: #16a34a; color: #fff; }
+.btn-lg { padding: 13px 28px; font-size: 15px; }
+.btn-block { width: 100%; }
+
+/* ========== DROP ZONE ========== */
+.drop-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: .2s; background: #f8fafc; }
+.drop-zone:hover { border-color: #2563eb; background: #eff6ff; }
+.drop-zone .dz-icon { font-size: 32px; margin-bottom: 8px; }
+.drop-zone .dz-title { font-size: 14px; font-weight: 600; color: #334155; }
+.drop-zone .dz-hint { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+.drop-zone.ok { border-color: #16a34a; background: #f0fdf4; }
+
+/* ========== SECTION BLOCK ========== */
+.sec-block { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; background: #fafbfc; }
+.sec-block .sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.tag { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 4px; letter-spacing: .5px; text-transform: uppercase; }
+.tag-writing { background: #fef3c7; color: #92400e; }
+.tag-listening { background: #dbeafe; color: #1e40af; }
+.tag-reading { background: #dcfce7; color: #166534; }
+.tag-translation { background: #f3e8ff; color: #6b21a8; }
+.ans-badge { font-size: 11px; color: #16a34a; display: flex; align-items: center; gap: 4px; }
+.sec-block textarea { width: 100%; min-height: 60px; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; font-size: 12px; font-family: "Times New Roman","SimSun",serif; resize: vertical; line-height: 1.7; }
+
+/* ========== FILE INPUTS ========== */
+.file-row { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+.file-row .file-name { font-size: 12px; color: #64748b; }
+
+/* ========== EXAM LAYOUT ========== */
+.exam-layout { display: flex; gap: 20px; }
+.exam-side { width: 150px; flex-shrink: 0; }
+.exam-side .st { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 8px; font-size: 13px; cursor: default; margin-bottom: 3px; color: #94a3b8; transition: .15s; }
+.exam-side .st .sn { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; background: #f1f5f9; color: #94a3b8; flex-shrink: 0; }
+.exam-side .st.active { color: #0f172a; font-weight: 600; background: #f1f5f9; }
+.exam-side .st.active .sn { background: #2563eb; color: #fff; }
+.exam-side .st.done { color: #16a34a; }
+.exam-side .st.done .sn { background: #16a34a; color: #fff; }
+.exam-side .st.skipped { color: #94a3b8; text-decoration: line-through; }
+.exam-main { flex: 1; min-width: 0; }
+
+/* ========== TIMER ========== */
+.timer-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 16px; }
+.timer-bar .sec-label { font-weight: 700; font-size: 14px; }
+.timer-bar .time-num { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.timer-bar.warn .time-num { color: #ea580c; }
+.timer-bar.danger .time-num { color: #dc2626; animation: pulse .6s infinite; }
+@keyframes pulse { 50% { opacity: .45; } }
+
+/* ========== EDITOR ========== */
+.editor-box { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 18px; }
+.editor-box .prompt { font-size: 13px; margin-bottom: 14px; line-height: 1.8; color: #334155; }
+.editor-box textarea { width: 100%; min-height: 240px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; font-size: 13px; font-family: "Times New Roman","SimSun",serif; line-height: 1.8; resize: vertical; }
+.editor-meta { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: #94a3b8; }
+
+/* ========== AUDIO ========== */
+.audio-bar { background: #f8fafc; border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
+.audio-bar .play-btn { width: 40px; height: 40px; border-radius: 50%; background: #2563eb; color: #fff; border: none; font-size: 16px; cursor: pointer; flex-shrink: 0; }
+.audio-bar .prog { flex: 1; height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+.audio-bar .prog-fill { height: 100%; background: #2563eb; border-radius: 3px; width: 0; }
+.audio-bar .a-time { font-size: 12px; color: #64748b; font-variant-numeric: tabular-nums; }
+
+/* ========== MCQ ========== */
+.mcq-q { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #0f172a; }
+.mcq-opt { display: block; width: 100%; text-align: left; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 8px; margin-bottom: 7px; background: #fff; cursor: pointer; font-size: 14px; transition: .15s; }
+.mcq-opt:hover { border-color: #93c5fd; background: #eff6ff; }
+.mcq-opt.pick { border-color: #2563eb; background: #dbeafe; font-weight: 600; }
+.mcq-ctrl { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+.mcq-ctrl .q-idx { font-size: 12px; color: #64748b; }
+
+/* ========== READING TABS ========== */
+.read-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+.read-tab { padding: 8px 14px; border-radius: 6px; font-size: 12px; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; transition: .15s; }
+.read-tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+/* ========== READING SIDE-BY-SIDE LAYOUT ========== */
+.read-layout { display: flex; gap: 16px; min-height: 380px; }
+.read-left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.read-right { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+/* ========== READING PASSAGE & BLANKS ========== */
+.read-passage { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; overflow-y: auto; flex: 1; }
+.passage-text { font-size: 15px; line-height: 2.2; white-space: pre-wrap; color: #334155; }
+.match-para { padding: 10px 14px; border-left: 3px solid #e2e8f0; margin-bottom: 8px; background: #fff; border-radius: 0 6px 6px 0; font-size: 14px; line-height: 1.8; }
+.match-para:nth-child(odd) { background: #f8fafc; }
+
+/* ========== BANKED CLOZE BLANKS ========== */
+.blank { display: inline-block; min-width: 70px; border-bottom: 2px solid #cbd5e1; text-align: center; padding: 2px 8px; margin: 0 3px; cursor: pointer; transition: .15s; border-radius: 3px 3px 0 0; font-size: 14px; vertical-align: baseline; }
+.blank-empty { color: #94a3b8; }
+.blank-filled { color: #2563eb; font-weight: 600; border-bottom-color: #2563eb; }
+.blank-sel { outline: 2px solid #2563eb; outline-offset: 1px; background: #eff6ff; }
+.blank:hover { background: #eff6ff; }
+
+/* ========== WORD BANK ========== */
+.word-bank { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.word-bank .wb { padding: 6px 14px; border-radius: 20px; font-size: 13px; background: #f1f5f9; border: 1px solid #e2e8f0; cursor: pointer; transition: .15s; }
+.word-bank .wb:hover { background: #dbeafe; border-color: #93c5fd; }
+.word-bank .wb.used { opacity: .3; text-decoration: line-through; cursor: not-allowed; }
+
+/* ========== RESULTS ========== */
+.score-hero { text-align: center; padding: 16px 0; }
+.score-ring { width: 130px; height: 130px; border-radius: 50%; margin: 0 auto 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 5px solid #e2e8f0; }
+.score-ring .big { font-size: 38px; font-weight: 800; line-height: 1; }
+.score-ring .sub { font-size: 11px; color: #64748b; }
+.score-ring.good { border-color: #16a34a; color: #16a34a; }
+.score-ring.ok { border-color: #ea580c; color: #ea580c; }
+.score-ring.bad { border-color: #dc2626; color: #dc2626; }
+.score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.score-row { background: #f8fafc; border-radius: 8px; padding: 12px 14px; }
+.score-row .sr-label { font-size: 11px; color: #64748b; }
+.score-row .sr-val { font-size: 20px; font-weight: 700; margin-top: 2px; }
+.score-row .sr-bar { height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.score-row .sr-fill { height: 100%; border-radius: 2px; transition: width .4s; }
+
+/* ========== NO ANSWER BOX ========== */
+.no-ans { text-align: center; padding: 36px 20px; background: #fffbeb; border: 2px solid #fcd34d; border-radius: 12px; margin-bottom: 18px; }
+.no-ans .no-icon { font-size: 36px; margin-bottom: 10px; }
+.no-ans h3 { font-size: 15px; color: #92400e; margin-bottom: 6px; }
+.no-ans p { font-size: 12px; color: #78716c; margin-bottom: 14px; line-height: 1.7; }
+
+/* ========== ERROR LIST ========== */
+.err-list { margin-top: 12px; }
+.err-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; background: #fef2f2; border-radius: 6px; margin-bottom: 5px; font-size: 12px; }
+.err-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; color: #fff; white-space: nowrap; flex-shrink: 0; }
+.et-red { background: #dc2626; }
+.et-orange { background: #ea580c; }
+.et-yellow { background: #ca8a04; }
+
+/* ========== Q GRID ========== */
+.q-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.q-chip { width: 46px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.q-chip.ok { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+.q-chip.fail { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.q-chip.na { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
+.expand-link { font-size: 12px; color: #2563eb; cursor: pointer; margin-top: 8px; display: inline-block; }
+
+/* ========== EXPORT ========== */
+.export-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 16px; }
+.export-card { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 20px; text-align: center; }
+.export-card h3 { font-size: 15px; margin-bottom: 10px; }
+.export-card ul { text-align: left; font-size: 12px; color: #64748b; line-height: 2; padding-left: 18px; margin-bottom: 14px; }
+
+/* ========== MISC ========== */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.gap { gap: 10px; }
+.gap-lg { gap: 18px; }
+.mt { margin-top: 12px; }
+.mt-lg { margin-top: 20px; }
+.mb { margin-bottom: 12px; }
+.text-center { text-align: center; }
+.text-muted { color: #64748b; font-size: 12px; }
+.font-mono { font-family: Consolas,"Courier New",monospace; }
+hr { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
+.spoiler { background: #f1f5f9; border-radius: 4px; padding: 1px 4px; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<!-- ========== TOP BAR ========== -->
+<header class="topbar">
+  <div class="topbar-brand">CET-4 全真模拟</div>
+  <div class="topbar-nav" id="topnav">
+    <button class="ns active" data-scr="import">1. 导入试卷</button>
+    <button class="ns" data-scr="exam">2. 答题</button>
+    <button class="ns" data-scr="results">3. 成绩</button>
+    <button class="ns" data-scr="export">4. 导出报告</button>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- =============================================================== -->
+<!-- SCREEN 1: IMPORT -->
+<!-- =============================================================== -->
+<div class="scr active" id="scr-import">
+
+  <div class="card">
+    <h2>Step 1 · 上传真题试卷 (PDF)</h2>
+    <p class="sub">浏览器本地解析，文件不会上传到任何服务器。</p>
+    <div class="drop-zone" id="pdf-zone"
+         ondragover="event.preventDefault();this.style.borderColor='#2563eb';this.style.background='#eff6ff'"
+         ondragleave="this.style.borderColor='';this.style.background=''"
+         ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';handlePDF({target:{files:event.dataTransfer.files}})">
+      <div class="dz-icon" id="pdf-icon">📄</div>
+      <div class="dz-title" id="pdf-title">拖拽 PDF 到此处，或点击下方按钮选择文件</div>
+      <div class="dz-hint" id="pdf-hint">支持 .pdf · 纯本地解析</div>
+      <button class="btn btn-outline" style="margin-top:12px" onclick="event.stopPropagation();document.getElementById('pdf-inp').click()">选择 PDF 文件</button>
+    </div>
+    <input type="file" id="pdf-inp" accept=".pdf" style="position:absolute;left:-9999px" onchange="handlePDF(event)">
+  </div>
+
+  <div class="card" id="review-card">
+    <h2>Step 2 · 确认提取内容 & 答案</h2>
+    <p class="sub" id="review-sub">上传 PDF 后自动识别 4 个题型区域并抓取答案。</p>
+    <div id="review-sections"></div>
+  </div>
+
+  <div class="card">
+    <h2>Step 3 · 听力音频（可选）</h2>
+    <p class="sub">不上传音频则自动跳过听力部分，总考试时间缩减 25 分钟。</p>
+    <div class="file-row">
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('audio-inp').click()">选择音频文件</button>
+      <span class="file-name" id="audio-name">未选择文件</span>
+      <input type="file" id="audio-inp" accept="audio/*" style="display:none" onchange="handleAudio(event)">
+    </div>
+  </div>
+
+  <div class="text-center mt-lg">
+    <button class="btn btn-primary btn-lg" id="btn-start" onclick="startExam()">开始考试 · 预计 <span id="est-time">125</span> 分钟</button>
+  </div>
+</div>
+
+<!-- =============================================================== -->
+<!-- SCREEN 2: EXAM -->
+<!-- =============================================================== -->
+<div class="scr" id="scr-exam">
+  <div class="exam-layout">
+    <div class="exam-side" id="exam-side"></div>
+    <div class="exam-main">
+      <div class="timer-bar" id="timer-bar">
+        <span class="sec-label" id="timer-label">Part I · Writing</span>
+        <span class="time-num" id="timer-num">30:00</span>
+      </div>
+      <div id="exam-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================================== -->
+<!-- SCREEN 3: RESULTS -->
+<!-- =============================================================== -->
+<div class="scr" id="scr-results">
+  <div class="card">
+    <h2>成绩单</h2>
+    <div id="results-body"></div>
+  </div>
+</div>
+
+<!-- =============================================================== -->
+<!-- SCREEN 4: EXPORT -->
+<!-- =============================================================== -->
+<div class="scr" id="scr-export">
+  <div class="card" style="text-align:center;padding:40px 28px">
+    <h2>成绩报告已就绪</h2>
+    <p class="sub">两份报告包含完整答题数据。MD 报告可直接发给 AI 助手深度分析。</p>
+    <div class="export-cols">
+      <div class="export-card">
+        <h3>📄 DOCX 成绩单</h3>
+        <ul>
+          <li>总分 & 等级判定</li>
+          <li>各题型得分明细</li>
+          <li>错题分类汇总</li>
+          <li>备考建议</li>
+        </ul>
+        <button class="btn btn-primary btn-block" onclick="downloadDOCX()">下载 .docx</button>
+      </div>
+      <div class="export-card">
+        <h3>🤖 MD 详细报告</h3>
+        <ul>
+          <li>内置 AI 分析提示词</li>
+          <li>完整题目 + 你的答案</li>
+          <li>每题对错 / 语法检测结果</li>
+          <li>复制发给 AI 即可分析</li>
+        </ul>
+        <button class="btn btn-outline btn-block" onclick="downloadMD()">下载 .md</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ============================================================================
+// GLOBAL STATE
+// ============================================================================
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+const EXAM = {
+  paper: null,           // parsed examPaper object
+  hasAudio: false,       // audio file uploaded?
+  audioBlob: null,       // stored for exam
+  audioURL: null,
+  currentSection: 0,     // 0=writing, 1=listening, 2=reading, 3=translation
+  sectionOrder: ['writing', 'listening', 'reading', 'translation'],
+  answers: {},           // user answers: { writing: "...", listening: {1:"A",2:"B"...}, ... }
+  timers: { writing: 1800, listening: 1500, reading: 2400, translation: 1800 },
+  elapsed: { writing: 0, listening: 0, reading: 0, translation: 0 },
+  timerId: null,
+  submitted: { writing: false, listening: false, reading: false, translation: false },
+  results: null          // computed after all submitted
+};
+
+// ============================================================================
+// SCREEN NAVIGATION
+// ============================================================================
+document.querySelectorAll('#topnav .ns').forEach(btn => {
+  btn.addEventListener('click', () => goScreen(btn.dataset.scr));
+});
+
+function goScreen(name) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('active'));
+  document.getElementById('scr-' + name).classList.add('active');
+  document.querySelectorAll('#topnav .ns').forEach(b => {
+    b.classList.remove('active', 'done');
+    const n = b.dataset.scr;
+    const order = ['import', 'exam', 'results', 'export'];
+    if (order.indexOf(n) < order.indexOf(name)) b.classList.add('done');
+    if (n === name) b.classList.add('active');
+  });
+}
+
+// ============================================================================
+// SCREEN 1: PDF IMPORT
+// ============================================================================
+async function handlePDF(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('pdf-title').textContent = file.name;
+  document.getElementById('pdf-hint').textContent = '解析中...';
+  document.getElementById('pdf-zone').classList.add('ok');
+
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let fullText = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const p = await pdf.getPage(i);
+    const tc = await p.getTextContent({ normalizeWhitespace: true });
+    let lastY = null, pageText = '';
+    for (const item of tc.items) {
+      const y = item.transform[5];
+      if (lastY !== null && Math.abs(y - lastY) > 2) pageText += '\n';
+      pageText += item.str;
+      lastY = y;
+    }
+    fullText += `\n===PAGE ${i}===\n` + pageText;
+  }
+
+  document.getElementById('pdf-hint').textContent = `✓ 解析完成 · 共 ${pdf.numPages} 页`;
+  parseExamPaper(fullText, pdf.numPages);
+}
+
+function parseExamPaper(text, numPages) {
+  const lines = text.split('\n');
+  const paper = {
+    writing: { prompt: '' },
+    listening: { sections: [], answers: {} },
+    reading: { bankedCloze: {}, paraMatch: {}, carefulReading: {}, answers: {} },
+    translation: { zh: '' }
+  };
+
+  // Detect section boundaries
+  let mode = 'unknown';
+  let currentText = [];
+  const secMarkers = [
+    { re: /Part\s*[I1]\b\s+Writing|Writing\s*\(30|写作|作文/i, key: 'writing' },
+    { re: /Part\s*[I]{2}\b\s+Listening|Listening\s+Comprehension|听力(?!.*答案)/i, key: 'listening' },
+    { re: /Part\s*[I]{3}\b\s+Reading|Reading\s+Comprehension|阅读(?!.*答案)/i, key: 'reading' },
+    { re: /Part\s*(?:IV|[I]{2}V)\b\s+Translation|Translation\s*\(30|翻译(?!.*答案)/i, key: 'translation' },
+  ];
+
+  const sections = { writing: '', listening: '', reading: '', translation: '' };
+
+  const visited = new Set();
+  for (const line of lines) {
+    let matched = false;
+    for (const m of secMarkers) {
+      if (m.re.test(line)) {
+        // Only switch to this section once — repeats are answer key
+        if (visited.has(m.key)) { matched = true; break; }
+        if (currentText.length > 0 && mode !== 'unknown') {
+          sections[mode] += currentText.join('\n');
+        }
+        mode = m.key;
+        currentText = [line];
+        matched = true;
+        visited.add(m.key);
+        break;
+      }
+    }
+    if (!matched) currentText.push(line);
+    // Once all 4 sections seen, stop at answer-key patterns (multiple "N. X" clusters)
+    if (visited.size >= 4 && /(\d{1,2}\s*[\.\)、]\s*[A-Da-d]\s+){4,}/.test(line)) break;
+  }
+  if (currentText.length > 0 && mode !== 'unknown') {
+    sections[mode] += currentText.join('\n');
+  }
+
+  paper.writing.prompt = cleanText(sections.writing);
+  paper.translation.zh = cleanText(sections.translation);
+
+  // Parse listening section
+  const listenSecNames = ['Section A', 'Section B', 'Section C'];
+  let lsecs = [];
+  let currLS = null;
+  for (const l of sections.listening.split('\n')) {
+    let foundSec = false;
+    for (const sn of listenSecNames) {
+      if (l.includes(sn)) { lsecs.push({ name: sn, text: l }); currLS = lsecs[lsecs.length - 1]; foundSec = true; break; }
+    }
+    if (!foundSec && currLS) currLS.text += '\n' + l;
+  }
+  if (lsecs.length === 0) {
+    lsecs = [{ name: 'Listening', text: sections.listening }];
+  }
+  paper.listening.sections = lsecs;
+
+  // Clean reading — remove page markers
+  paper.reading._raw = sections.reading.replace(/===PAGE \d+===/g, '');
+
+  // --- Answer extraction: scan last pages ---
+  const lastPages = lines.join('\n');
+  const ansSection = extractAnswerSection(lastPages);
+  if (ansSection) {
+    const parsed = parseAnswers(ansSection);
+    // Merge into paper
+    for (const [k, v] of Object.entries(parsed.listening || {})) {
+      paper.listening.answers[k] = v;
+    }
+    for (const [k, v] of Object.entries(parsed.reading || {})) {
+      paper.reading.answers[k] = v;
+    }
+  }
+
+  // Count questions
+  paper.listening.totalQ = countQuestions(sections.listening);
+  paper.reading.totalQ = countQuestions(sections.reading);
+
+  EXAM.paper = paper;
+  renderReview(paper);
+  // review-card is now always visible
+  updateEstTime();
+
+  // Save raw text for MD report
+  EXAM._rawText = text;
+}
+
+function cleanText(s) {
+  return s.replace(/===PAGE \d+===/g, '')
+    .replace(/Part I Writing\s*-\s*Reference Essay:[\s\S]*/gi, '')
+    .replace(/Part IV Translation\s*-\s*Reference:[\s\S]*/gi, '')
+    .replace(/[参参][考考][答答][案案][\s\S]*/g, '')
+    .replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function extractAnswerSection(text) {
+  // Try common answer section markers
+  const patterns = [
+    /参考[答]案[：:]/i,
+    /[答]案[及解]?[：:]/i,
+    /Answer\s*Key[：:]/i,
+    /Key[：:]\s*\n/i,
+    /试题答案[：:]/i,
+    /参考答案[及与]/i,
+    /答案与解析/i,
+  ];
+  let bestIdx = -1;
+  for (const pat of patterns) {
+    const m = text.match(pat);
+    if (m && m.index > bestIdx) bestIdx = m.index;
+  }
+  if (bestIdx > 0) {
+    // Take text from bestIdx to end
+    return text.substring(bestIdx, Math.min(bestIdx + 3000, text.length));
+  }
+  // Try: scan last 30% of text for answer-like patterns
+  const last30 = text.substring(Math.floor(text.length * 0.7));
+  if (/\d+[\.、]\s*[A-D]/g.test(last30)) {
+    return last30;
+  }
+  return null;
+}
+
+function parseAnswers(text) {
+  const result = { listening: {}, reading: {} };
+  let mode = 'listening';
+
+  // Detect reading section in answers
+  const readSplit = text.search(/阅读[理]?[解]?|Reading|read/i);
+
+  const lines = text.split('\n');
+  for (const line of lines) {
+    if (readSplit >= 0 && text.indexOf(line) >= readSplit) mode = 'reading';
+
+    // Match patterns: "1. B" or "1-5: B A C C D" or "1) A 2) B"
+    // Range pattern: "1-5 BACCD" or "1-5: B A C C D"
+    const rangeMatch = line.match(/(\d+)\s*[-–]\s*(\d+)\s*[：:]\s*([A-Da-d\s]+)/);
+    if (rangeMatch) {
+      const start = parseInt(rangeMatch[1]);
+      const letters = rangeMatch[3].replace(/\s/g, '').toUpperCase().split('');
+      for (let i = 0; i < letters.length; i++) {
+        if (letters[i] >= 'A' && letters[i] <= 'D') {
+          result[mode][String(start + i)] = letters[i];
+        }
+      }
+      continue;
+    }
+
+    // Single pattern: "1. B" or "1) A" or "1、C" (A-O for reading banked cloze 15-choose-10)
+    const singleRe = /(\d+)\s*[\.\)、]\s*([A-Oa-o])\b/g;
+    let sm;
+    while ((sm = singleRe.exec(line)) !== null) {
+      result[mode][sm[1]] = sm[2].toUpperCase();
+    }
+  }
+  return result;
+}
+
+function countQuestions(text) {
+  // Count numbered items like "1." "2)" etc
+  const matches = text.match(/\b(\d{1,2})\s*[\.\)、]\s*[A-Oa-o]\b/g);
+  return matches ? new Set(matches.map(m => parseInt(m))).size : 0;
+}
+
+function renderReview(paper) {
+  document.getElementById('review-sub').textContent = '自动识别 4 个题型区域。答案如在试卷末尾会自动抓取。可点击文字直接编辑。';
+  const container = document.getElementById('review-sections');
+  const secs = [
+    { key: 'writing', tag: 'Part I · Writing', cls: 'tag-writing', content: paper.writing.prompt || '(未识别到写作题目)' },
+    { key: 'listening', tag: 'Part II · Listening', cls: 'tag-listening',
+      content: paper.listening.sections.map(s => s.text).join('\n\n') || '(未识别)',
+      ans: Object.keys(paper.listening.answers).length > 0 ? `已检测到 ${Object.keys(paper.listening.answers).length} 题答案` : null },
+    { key: 'reading', tag: 'Part III · Reading', cls: 'tag-reading',
+      content: paper.reading._raw || '(未识别)',
+      ans: Object.keys(paper.reading.answers).length > 0 ? `已检测到 ${Object.keys(paper.reading.answers).length} 题答案` : null },
+    { key: 'translation', tag: 'Part IV · Translation', cls: 'tag-translation', content: paper.translation.zh || '(未识别到翻译段落)' },
+  ];
+
+  container.innerHTML = secs.map(s => `
+    <div class="sec-block">
+      <div class="sec-head">
+        <span class="tag ${s.cls}">${s.tag}</span>
+        ${s.ans ? `<span class="ans-badge">✅ ${s.ans}</span>` : ''}
+      </div>
+      <textarea oninput="updatePaper('${s.key}', this.value)">${escapeHtml(s.content)}</textarea>
+    </div>
+  `).join('');
+}
+
+function updatePaper(key, val) {
+  if (key === 'writing') EXAM.paper.writing.prompt = val;
+  if (key === 'translation') EXAM.paper.translation.zh = val;
+  if (key === 'listening') EXAM.paper.listening._editedText = val;
+  if (key === 'reading') EXAM.paper.reading._raw = val;
+}
+
+function handleAudio(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  EXAM.hasAudio = true;
+  EXAM.audioBlob = file;
+  EXAM.audioURL = URL.createObjectURL(file);
+  document.getElementById('audio-name').textContent = '✓ ' + file.name;
+  updateEstTime();
+}
+
+function updateEstTime() {
+  const mins = EXAM.hasAudio ? 125 : 100;
+  document.getElementById('est-time').textContent = mins;
+}
+
+// ============================================================================
+// SCREEN 2: EXAM
+// ============================================================================
+function startExam() {
+  if (!EXAM.paper) { alert('请先导入试卷 PDF'); return; }
+  // Always set section order based on hasAudio (overrides stale localStorage restore)
+  if (EXAM.hasAudio) {
+    EXAM.sectionOrder = ['writing', 'listening', 'reading', 'translation'];
+    EXAM.submitted.listening = false;
+  } else {
+    EXAM.sectionOrder = ['writing', 'reading', 'translation'];
+    EXAM.submitted.listening = true; // skip
+  }
+  EXAM.currentSection = 0;
+  EXAM.answers = { writing: '', listening: {}, reading: {}, translation: '' };
+  EXAM.elapsed = { writing: 0, listening: 0, reading: 0, translation: 0 };
+  EXAM.submitted = { writing: false, listening: EXAM.submitted.listening || false, reading: false, translation: false };
+
+  renderExamSidebar();
+  goScreen('exam');
+  loadSection(EXAM.sectionOrder[0]);
+}
+
+function renderExamSidebar() {
+  const names = { writing: '写作', listening: '听力', reading: '阅读', translation: '翻译' };
+  const times = { writing: '(30min)', listening: '(25min)', reading: '(40min)', translation: '(30min)' };
+  const sidebar = document.getElementById('exam-side');
+  sidebar.innerHTML = EXAM.sectionOrder.map((s, i) => {
+    let cls = '';
+    if (i < EXAM.currentSection) cls = 'done';
+    else if (i === EXAM.currentSection) cls = 'active';
+    else cls = '';
+    if (EXAM.submitted[s] && !EXAM.timers[s]) cls += ' done';
+    if (s === 'listening' && !EXAM.hasAudio) cls += ' skipped';
+    const num = i < EXAM.currentSection ? '✓' : (i + 1);
+    return `<div class="st ${cls}"><span class="sn">${num}</span>${names[s]} ${times[s]}</div>`;
+  }).join('');
+}
+
+function loadSection(section) {
+  clearInterval(EXAM.timerId);
+  const remaining = EXAM.timers[section] - (EXAM.elapsed[section] || 0);
+  const minutes = Math.floor(remaining / 60);
+  const seconds = remaining % 60;
+  document.getElementById('timer-num').textContent = `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+  document.getElementById('timer-bar').classList.remove('warn', 'danger');
+
+  const names = { writing: 'Part I · Writing', listening: 'Part II · Listening', reading: 'Part III · Reading', translation: 'Part IV · Translation' };
+  document.getElementById('timer-label').textContent = names[section];
+
+  renderExamSection(section);
+  renderExamSidebar();
+  saveProgress();
+
+  EXAM.timerId = setInterval(() => {
+    EXAM.elapsed[section] = (EXAM.elapsed[section] || 0) + 1;
+    const remain = EXAM.timers[section] - EXAM.elapsed[section];
+    const m = Math.floor(remain / 60);
+    const s = remain % 60;
+    document.getElementById('timer-num').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+    const bar = document.getElementById('timer-bar');
+    if (remain <= 120) bar.classList.add('danger');
+    else if (remain <= 300) bar.classList.add('warn');
+
+    if (remain <= 0) {
+      clearInterval(EXAM.timerId);
+      submitSection(section);
+    }
+    if (Math.floor(EXAM.elapsed[section]) % 30 === 0 && EXAM.elapsed[section] > 0) {
+      saveProgress();
+    }
+  }, 1000);
+}
+
+function renderExamSection(section) {
+  const el = document.getElementById('exam-content');
+  const paper = EXAM.paper;
+
+  switch (section) {
+    case 'writing':
+      el.innerHTML = `
+        <div class="editor-box">
+          <div class="prompt">${escapeHtml(paper.writing.prompt || 'Write an essay on the given topic.')}</div>
+          <textarea id="writing-txt" placeholder="在此输入你的作文...">${escapeHtml(EXAM.answers.writing)}</textarea>
+          <div class="editor-meta"><span id="wc">字数: ${countWords(EXAM.answers.writing)}</span><span>Ctrl+Enter 提交</span></div>
+        </div>
+        <div class="text-center mt-lg"><button class="btn btn-primary btn-lg" id="writing-submit-btn" onclick="submitSection('writing')">提交写作 → 进入${EXAM.hasAudio ? '听力' : '阅读'}</button></div>
+      `;
+      document.getElementById('writing-txt').addEventListener('input', function() {
+        EXAM.answers.writing = this.value;
+        document.getElementById('wc').textContent = '字数: ' + countWords(this.value);
+      });
+      document.getElementById('writing-txt').addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'Enter') submitSection('writing');
+      });
+      break;
+
+    case 'listening':
+      const lsecs = paper.listening.sections;
+      const allLQuestions = [];
+      const lSections = [];
+      for (const sec of lsecs) {
+        const qs = extractQuestions(sec.text);
+        lSections.push({ name: sec.name, questions: qs });
+        allLQuestions.push(...qs);
+      }
+      EXAM._listenData = { sections: lSections, all: allLQuestions };
+      if (!EXAM.answers.listening || Object.keys(EXAM.answers.listening).length === 0) {
+        EXAM.answers.listening = {};
+        for (const q of allLQuestions) EXAM.answers.listening[q.num] = '';
+      }
+      renderAllListening(el, allLQuestions, lSections);
+      break;
+
+    case 'reading':
+      renderReading(el, paper);
+      break;
+
+    case 'translation':
+      el.innerHTML = `
+        <div class="editor-box">
+          <div class="prompt">将以下中文翻译成英文：<br><br>${escapeHtml(paper.translation.zh || '(未识别到翻译段落)')}</div>
+          <textarea id="trans-txt" placeholder="在此输入你的英文翻译...">${escapeHtml(EXAM.answers.translation)}</textarea>
+          <div class="editor-meta"><span id="wc2">字数: ${countWords(EXAM.answers.translation)}</span><span>Ctrl+Enter 提交</span></div>
+        </div>
+        <div class="text-center mt-lg"><button class="btn btn-primary btn-lg" onclick="submitSection('translation')">提交翻译 → 查看成绩</button></div>
+      `;
+      document.getElementById('trans-txt').addEventListener('input', function() {
+        EXAM.answers.translation = this.value;
+        document.getElementById('wc2').textContent = '字数: ' + countWords(this.value);
+      });
+      document.getElementById('trans-txt').addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'Enter') submitSection('translation');
+      });
+      break;
+  }
+}
+
+function renderAllListening(el, questions, lSections) {
+  if (!questions.length) { el.innerHTML = '<p>未识别到听力题目</p>'; return; }
+
+  // Group questions by section
+  let html = '';
+  if (EXAM.audioURL) {
+    html += `
+    <div class="audio-bar">
+      <button class="play-btn" id="audio-play-btn" onclick="toggleAudio()">▶</button>
+      <div class="prog"><div class="prog-fill" id="audio-prog"></div></div>
+      <span class="a-time" id="audio-time">00:00 / 00:00</span>
+      <audio id="audio-el" style="display:none" src="${EXAM.audioURL}"></audio>
+    </div>`;
+  }
+
+  let qIdx = 0;
+  for (const sec of lSections) {
+    const secQs = sec.questions;
+    if (!secQs.length) continue;
+    html += `<div class="card" style="margin-bottom:12px">`;
+    html += `<div style="font-size:11px;color:#64748b;margin-bottom:10px;font-weight:600">${escapeHtml(sec.name)}</div>`;
+    for (const q of secQs) {
+      const picked = EXAM.answers.listening[q.num] || '';
+      html += `
+      <div class="mcq-q" style="margin-top:14px">${q.num}. ${escapeHtml(q.stem)}</div>
+      ${q.options.map((o,i) => {
+        const letter = String.fromCharCode(65 + i);
+        return `<button class="mcq-opt ${picked === letter ? 'pick' : ''}" onclick="pickListen('${q.num}','${letter}')">${letter}) ${escapeHtml(o)}</button>`;
+      }).join('')}`;
+    }
+    html += `</div>`;
+  }
+
+  html += `
+  <div class="text-center mt-lg">
+    <button class="btn btn-primary btn-lg" onclick="submitSection('listening')">✓ 提交听力</button>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+function pickListen(num, letter) {
+  EXAM.answers.listening[num] = letter;
+  // Update button states directly without full re-render
+  const allBtns = document.querySelectorAll('.mcq-opt');
+  allBtns.forEach(btn => {
+    const onclick = btn.getAttribute('onclick') || '';
+    const match = onclick.match(/pickListen\('(\d+)','([A-D])'\)/);
+    if (match && match[1] === String(num)) {
+      btn.classList.toggle('pick', match[2] === letter);
+    }
+  });
+}
+
+function toggleAudio() {
+  const audio = document.getElementById('audio-el');
+  if (!audio) return;
+  if (audio.paused) { audio.play(); document.getElementById('audio-play-btn').textContent = '⏸'; }
+  else { audio.pause(); document.getElementById('audio-play-btn').textContent = '▶'; }
+  audio.ontimeupdate = () => {
+    const pct = (audio.currentTime / audio.duration) * 100 || 0;
+    document.getElementById('audio-prog').style.width = pct + '%';
+    document.getElementById('audio-time').textContent = fmtTime(audio.currentTime) + ' / ' + fmtTime(audio.duration || 0);
+  };
+  audio.onended = () => { document.getElementById('audio-play-btn').textContent = '▶'; };
+}
+
+function fmtTime(s) {
+  if (!s || isNaN(s)) return '00:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+
+// ========== READING ==========
+function renderReading(el, paper) {
+  const raw = paper.reading._raw || '';
+  const sections = buildReadSections(raw);
+  EXAM._readData = { sections };
+  if (!EXAM.answers.reading) EXAM.answers.reading = {};
+  for (const sec of sections) {
+    for (const q of sec.questions) {
+      if (!(q.num in EXAM.answers.reading)) EXAM.answers.reading[q.num] = '';
+    }
+  }
+  EXAM._readSecIdx = 0;
+  EXAM._readQIdx = 0;
+  EXAM._readSelectedBlank = null;
+  renderReadFrame(el);
+}
+
+// ---- parse raw text into 3 sub-sections ----
+function buildReadSections(raw) {
+  const sects = [];
+  // Split by Section A / B / C markers
+  const aM = raw.match(/Section\s*A\b/i);
+  const bM = raw.match(/Section\s*B\b/i);
+  const cM = raw.match(/Section\s*C\b/i);
+  const splits = [
+    { k: 'A', p: aM ? aM.index : -1 },
+    { k: 'B', p: bM ? bM.index : -1 },
+    { k: 'C', p: cM ? cM.index : -1 },
+  ].filter(s => s.p >= 0).sort((a, b) => a.p - b.p);
+
+  const chunks = { A: '', B: '', C: '' };
+  for (let i = 0; i < splits.length; i++) {
+    const st = splits[i].p;
+    const ed = i + 1 < splits.length ? splits[i + 1].p : raw.length;
+    chunks[splits[i].k] = raw.slice(st, ed);
+  }
+
+  // Section A: banked cloze (15选10)
+  if (chunks.A) {
+    const bank = [];
+    let wm;
+    const wbRe = /([A-O])\s*[\.\)、]\s*([a-zA-Z-]+)/g;
+    while ((wm = wbRe.exec(chunks.A)) !== null) {
+      if (!bank.find(b => b.l === wm[1])) bank.push({ l: wm[1], w: wm[2] });
+    }
+    // passage = everything before the word bank
+    const bankPos = chunks.A.search(/\n\s*A\s*[\.\)、]\s*[a-zA-Z]+/i);
+    let passage = (bankPos > 10 ? chunks.A.slice(0, bankPos) : chunks.A)
+      .replace(/Section\s*A\b[^\n]*/i, '').replace(/\(?Questions?\s*2[6-9]\b[^\n]*/i, '').trim();
+    // extract blank numbers from passage
+    const blanks = [];
+    let bm;
+    const blRe = /\(?(\d{2})\)?\s*(_{2,}|\s{2,})?/g;
+    while ((bm = blRe.exec(passage)) !== null) {
+      const n = parseInt(bm[1]);
+      if (n >= 26 && n <= 35) blanks.push(n);
+    }
+    const qs = blanks.map(n => ({ num: String(n), stem: '第 ' + n + ' 空' }));
+    if (qs.length > 0 || bank.length > 0) {
+      sects.push({ type: 'cloze', title: '选词填空 (Section A)', passage, questions: qs, wordBank: bank });
+    }
+  }
+
+  // Section B: paragraph matching
+  if (chunks.B) {
+    // Strip instruction lines before extraction (they contain "(36-41)" and "(A-G)" which confuse regex)
+    let bClean = chunks.B.replace(/^[^\n]*\n?/, ''); // remove "Section B ..." header
+    // Remove lines that are instructions (contain "match" or "questions" but no statement number)
+    bClean = bClean.replace(/^[^\n]*Match[^\n]*\n?/i, '').replace(/^[^\n]*Questions?\s*(?:3[6-9]|4[0-1])[^\n]*\n?/i, '');
+    // extract paragraphs A-G (long text follows each letter at line start)
+    const paras = [];
+    let pm;
+    const pRe = /(?:^|\n)\s*([A-G])\s*[\)、]\s*(.{20,}?)(?=(?:\n\s*[A-G]\s*[\)、])|\s*$)/gs;
+    while ((pm = pRe.exec(bClean)) !== null) paras.push({ l: pm[1], t: pm[2].trim() });
+    // extract statements 36-41 (only at line start to avoid "(36-41)" in instructions)
+    const stmts = [];
+    let sm2;
+    const sRe = /(?:^|\n)\s*(3[6-9]|4[0-1])\s*[\.\)、]\s*(.{15,}?)(?=\s*(?:\n\s*(?:3[6-9]|4[0-1]|[A-G])\s*[\.\)、])|$)/gs;
+    while ((sm2 = sRe.exec(bClean)) !== null) stmts.push({ n: sm2[1], t: sm2[2].trim() });
+    const qs2 = stmts.map(s => ({ num: s.n, stem: s.t }));
+    if (qs2.length > 0) {
+      sects.push({ type: 'match', title: '段落匹配 (Section B)', paragraphs: paras, questions: qs2 });
+    }
+  }
+
+  // Section C: careful reading
+  if (chunks.C) {
+    // Use line-start anchor to avoid matching "50)" inside "(Questions 46 to 50)"
+    const cClean = chunks.C.replace(/^[^\n]*\n?/, ''); // remove "Section C ..." header
+    const firstQ = cClean.search(/(?:^|\n)\s*(?:4[6-9]|5[0-5])\s*[\.\)、]/m);
+    let passage = (firstQ > 10 ? cClean.slice(0, firstQ) : cClean)
+      .replace(/\(?Questions?\s*[45]\d[^\n]*/i, '').trim();
+    const qs3 = extractQuestions(chunks.C);
+    if (qs3.length > 0) {
+      sects.push({ type: 'careful', title: '仔细阅读 (Section C)', passage, questions: qs3 });
+    }
+  }
+
+  // Fallback: treat whole text as one section
+  if (sects.length === 0) {
+    const rawQs = extractQuestions(raw);
+    if (rawQs.length > 0) sects.push({ type: 'careful', title: '阅读', passage: raw, questions: rawQs });
+  }
+  return sects;
+}
+
+// ---- render the frame (tabs + content area + controls) ----
+function renderReadFrame(el) {
+  const secs = EXAM._readData.sections;
+  const si = EXAM._readSecIdx;
+  if (secs.length === 0) {
+    el.innerHTML = '<p>未识别到阅读题目。</p><div class="text-center mt-lg"><button class="btn btn-primary" onclick="submitSection(\'reading\')">跳过 → 进入翻译</button></div>';
+    return;
+  }
+  el.innerHTML = `
+    <div class="read-tabs">${secs.map((s, i) =>
+      `<button class="read-tab ${i === si ? 'active' : ''}" onclick="switchReadSec(${i})">${s.title}</button>`
+    ).join('')}</div>
+    <div class="read-layout">
+      <div class="read-left">
+        <div id="read-passage-panel" class="read-passage"></div>
+      </div>
+      <div class="read-right">
+        <div id="read-q-card" class="card" style="flex:1;overflow-y:auto"></div>
+        <div id="read-ctrl" class="mcq-ctrl" style="justify-content:center;margin-top:8px"></div>
+      </div>
+    </div>
+  `;
+  EXAM._readQIdx = 0;
+  renderReadBody();
+}
+
+function switchReadSec(i) {
+  EXAM._readSecIdx = i;
+  EXAM._readQIdx = 0;
+  EXAM._readSelectedBlank = null;
+  EXAM._readSelectedMatch = null;
+  renderReadFrame(document.getElementById('exam-content'));
+}
+
+// ---- dispatch to section-type renderers ----
+function renderReadBody() {
+  const sec = EXAM._readData.sections[EXAM._readSecIdx];
+  if (!sec) return;
+  updateReadPassage(sec);
+  if (sec.type === 'cloze') renderClozeQ(sec);
+  else if (sec.type === 'match') renderMatchQ(sec);
+  else renderCarefulQ(sec);
+  updateReadCtrl(sec);
+}
+
+// ---- always-visible passage panel ----
+function updateReadPassage(sec) {
+  const panel = document.getElementById('read-passage-panel');
+  if (!panel) return;
+  if (sec.type === 'cloze') {
+    // Show passage with blanks highlighted
+    const passage = sec.passage || '';
+    let html = escapeHtml(passage);
+    // Highlight blanks: (26)____ → clickable span
+    html = html.replace(/\(?(2[6-9]|3[0-5])\)?\s*(_{2,}|\s{2,})?/g, (match, num) => {
+      const filled = EXAM.answers.reading[num] || '';
+      const sel = EXAM._readSelectedBlank === num ? ' blank-sel' : '';
+      const cls = filled ? 'blank-filled' + sel : 'blank-empty' + sel;
+      return `<span class="blank ${cls}" onclick="selectBlank('${num}')" title="点击选中,再从词库选词填入">${filled || '___'}</span>`;
+    });
+    panel.innerHTML = `<div class="passage-text" style="line-height:2.2;white-space:pre-wrap">${html}</div>`;
+  } else if (sec.type === 'match') {
+    // Show paragraphs A-G
+    panel.innerHTML = (sec.paragraphs || []).map(p =>
+      `<div class="match-para"><strong>${p.l})</strong> ${escapeHtml(p.t)}</div>`
+    ).join('');
+  } else {
+    // Careful reading: show passage
+    panel.innerHTML = `<div class="passage-text">${escapeHtml(sec.passage || '(未提取到阅读材料)')}</div>`;
+  }
+}
+
+// ---- Banked cloze: click blank then click word ----
+function renderClozeQ(sec) {
+  const card = document.getElementById('read-q-card');
+  const sel = EXAM._readSelectedBlank;
+  const wordBank = sec.wordBank || [];
+  const usedWords = new Set();
+  for (const [num, w] of Object.entries(EXAM.answers.reading)) {
+    if (w && num !== sel) usedWords.add(w);
+  }
+  card.innerHTML = `
+    <div style="font-size:12px;color:#64748b;margin-bottom:8px">
+      ${sel ? '当前选中: <b style="color:#2563eb">第 ' + sel + ' 空</b>（在左侧文章中点击空白切换）' : '请在左侧文章中点击要填的空'}
+    </div>
+    <div style="font-size:11px;color:#64748b;margin-bottom:10px">词汇库（15选10，已用词不可再选）</div>
+    <div class="word-bank">${wordBank.map(b => {
+      const used = usedWords.has(b.w);
+      return `<button class="wb ${used ? 'used' : ''}" onclick="${used ? '' : "fillBlank('" + sel + "','" + b.w + "')"}" ${used ? 'disabled' : ''}>${b.l}) ${b.w}</button>`;
+    }).join('')}</div>
+    ${sel ? `<button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="clearBlank('${sel}')">清除第 ${sel} 空</button><br>` : ''}
+    <div style="font-size:11px;color:#94a3b8;margin-top:10px">已填: ${Object.entries(EXAM.answers.reading).filter(([n,w]) => w && parseInt(n) >= 26 && parseInt(n) <= 35).map(([n,w]) => '<b>' + n + '</b>→' + w).join(' ') || '(无)'}</div>
+  `;
+}
+
+function selectBlank(num) {
+  EXAM._readSelectedBlank = (EXAM._readSelectedBlank === num) ? null : num;
+  const sec = EXAM._readData.sections[EXAM._readSecIdx];
+  if (!sec) return;
+  updateReadPassage(sec);
+  renderClozeQ(sec);
+  updateReadCtrl(sec);
+}
+
+function fillBlank(num, word) {
+  if (!num) return;
+  EXAM.answers.reading[num] = word;
+  EXAM._readSelectedBlank = null;
+  const sec = EXAM._readData.sections[EXAM._readSecIdx];
+  updateReadPassage(sec);
+  renderClozeQ(sec);
+  updateReadCtrl(sec);
+}
+
+function clearBlank(num) {
+  if (!num) return;
+  EXAM.answers.reading[num] = '';
+  EXAM._readSelectedBlank = null;
+  const sec = EXAM._readData.sections[EXAM._readSecIdx];
+  updateReadPassage(sec);
+  renderClozeQ(sec);
+  updateReadCtrl(sec);
+}
+
+// ---- Paragraph matching: click statement then click paragraph letter (like cloze) ----
+function renderMatchQ(sec) {
+  const card = document.getElementById('read-q-card');
+  const sel = EXAM._readSelectedMatch;
+  const paras = sec.paragraphs || [];
+  const questions = sec.questions || [];
+  const usedLetters = new Set();
+  for (const [num, letter] of Object.entries(EXAM.answers.reading)) {
+    if (letter && num !== sel && parseInt(num) >= 36 && parseInt(num) <= 41) usedLetters.add(letter);
+  }
+  let html = '<div style="font-size:13px;color:#64748b;margin-bottom:8px">';
+  html += sel ? '当前选中: <b style="color:#2563eb">Statement ' + sel + '</b>（点击下方 statement 可切换）' : '请先点击一条 statement，再选择对应的段落';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:#64748b;margin-bottom:6px">段落匹配（A-G，已匹配的不可再选）</div>';
+  html += '<div class="word-bank">';
+  for (var pi = 0; pi < paras.length; pi++) {
+    var p = paras[pi];
+    var used = usedLetters.has(p.l);
+    html += '<button class="wb' + (used ? ' used' : '') + '" ' + (used || !sel ? (used ? 'disabled' : '') : '') + ' onclick="' + (!used && sel ? "matchStmt('" + sel + "','" + p.l + "')" : '') + '">' + p.l + ') ' + escapeHtml(p.t.slice(0, 30)) + '...</button>';
+  }
+  html += '</div>';
+  if (sel) {
+    html += '<button class="btn btn-outline btn-sm" style="margin-top:4px" onclick="clearMatch(\'' + sel + '\')">清除 Statement ' + sel + '</button><br>';
+  }
+  html += '<div style="margin-top:10px;border-top:1px solid #e2e8f0;padding-top:10px">';
+  html += '<div style="font-size:12px;color:#64748b;margin-bottom:6px">点击 statement 选中，再点上方段落字母完成匹配</div>';
+  for (var qi = 0; qi < questions.length; qi++) {
+    var q = questions[qi];
+    var picked = EXAM.answers.reading[q.num] || '';
+    var isSel = sel === q.num;
+    html += '<div class="match-stmt" onclick="selectMatchStmt(\'' + q.num + '\')" style="padding:10px 12px;margin-bottom:6px;border:1.5px solid ' + (isSel ? '#2563eb' : '#e2e8f0') + ';border-radius:8px;cursor:pointer;background:' + (isSel ? '#eff6ff' : (picked ? '#f0fdf4' : '#fff')) + ';font-size:13px;line-height:1.6;transition:.15s">';
+    html += '<strong>' + q.num + '.</strong> ' + escapeHtml(q.stem);
+    if (picked) {
+      html += ' <span style="display:inline-block;background:#2563eb;color:#fff;border-radius:50%;min-width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-left:6px;padding:0 3px">' + picked + '</span>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  var filled = Object.entries(EXAM.answers.reading).filter(function(e) { return e[1] && parseInt(e[0]) >= 36 && parseInt(e[0]) <= 41; });
+  if (filled.length > 0) {
+    html += '<div style="font-size:12px;color:#94a3b8;margin-top:8px">已匹配: ' + filled.map(function(e) { return '<b>' + e[0] + '</b>→' + e[1]; }).join(' ') + '</div>';
+  }
+  card.innerHTML = html;
+}
+
+function selectMatchStmt(num) {
+  EXAM._readSelectedMatch = (EXAM._readSelectedMatch === num) ? null : num;
+  var sec = EXAM._readData.sections[EXAM._readSecIdx];
+  if (sec) renderMatchQ(sec);
+}
+
+function matchStmt(num, letter) {
+  if (!num) return;
+  EXAM.answers.reading[num] = letter;
+  EXAM._readSelectedMatch = null;
+  var sec = EXAM._readData.sections[EXAM._readSecIdx];
+  if (sec) { updateReadPassage(sec); renderMatchQ(sec); }
+}
+
+function clearMatch(num) {
+  if (!num) return;
+  EXAM.answers.reading[num] = '';
+  EXAM._readSelectedMatch = null;
+  var sec = EXAM._readData.sections[EXAM._readSecIdx];
+  if (sec) { updateReadPassage(sec); renderMatchQ(sec); }
+}
+
+// ---- Careful reading: standard MCQ ----
+function renderCarefulQ(sec) {
+  const card = document.getElementById('read-q-card');
+  const qi = EXAM._readQIdx;
+  const q = sec.questions[qi];
+  if (!q) { card.innerHTML = ''; return; }
+  const picked = EXAM.answers.reading[q.num] || '';
+  card.innerHTML = `
+    <div style="font-size:11px;color:#64748b;margin-bottom:8px">Question ${q.num} of ${sec.questions.length}</div>
+    <div class="mcq-q">${q.num}. ${escapeHtml(q.stem)}</div>
+    ${(q.options || []).map((o, i) => {
+      const letter = String.fromCharCode(65 + i);
+      return `<button class="mcq-opt ${picked === letter ? 'pick' : ''}" onclick="pickReadAns('${q.num}','${letter}')">${letter}) ${escapeHtml(o)}</button>`;
+    }).join('')}
+  `;
+}
+
+function pickReadAns(num, val) {
+  EXAM.answers.reading[num] = val;
+  const sec = EXAM._readData.sections[EXAM._readSecIdx];
+  if (sec.type === 'careful') renderCarefulQ(sec);
+  if (sec.type === 'cloze') { updateReadPassage(sec); renderClozeQ(sec); }
+}
+
+// ---- Navigation ----
+function updateReadCtrl(sec) {
+  const ctrl = document.getElementById('read-ctrl');
+  if (!ctrl) return;
+  // Cloze & match: no prev/next, just submit button
+  if (sec.type === 'cloze' || sec.type === 'match') {
+    ctrl.innerHTML = `
+      <button class="btn btn-primary btn-sm" onclick="submitSection('reading')">✓ 提交阅读</button>
+    `;
+    return;
+  }
+  const qi = EXAM._readQIdx;
+  const total = sec.questions.length;
+  ctrl.innerHTML = `
+    <button class="btn btn-outline btn-sm" ${qi === 0 ? 'disabled' : ''} onclick="navReadQ(${qi - 1})">← 上一题</button>
+    <span class="q-idx">${qi + 1} / ${total}</span>
+    ${qi < total - 1
+      ? '<button class="btn btn-outline btn-sm" onclick="navReadQ(' + (qi + 1) + ')">下一题 →</button>'
+      : '<button class="btn btn-primary btn-sm" onclick="submitSection(\'reading\')">✓ 提交阅读</button>'}
+  `;
+}
+
+function navReadQ(idx) {
+  EXAM._readQIdx = idx;
+  const sec = EXAM._readData.sections[EXAM._readSecIdx];
+  if (!sec) return;
+  if (sec.type === 'cloze') { renderClozeQ(sec); updateReadCtrl(sec); return; }
+  if (sec.type === 'match') renderMatchQ(sec);
+  else renderCarefulQ(sec);
+  updateReadCtrl(sec);
+}
+
+// ========== SUBMIT ==========
+function submitSection(section) {
+  // Writing word count check
+  if (section === 'writing') {
+    const wc = countWords(EXAM.answers.writing);
+    if (wc < 100) {
+      if (!confirm(`你的作文仅 ${wc} 词，不足 CET-4 要求的 120~180 词。\n\n确定要提交吗？\n（建议再写一些内容）`)) return;
+    }
+  }
+  clearInterval(EXAM.timerId);
+  EXAM.submitted[section] = true;
+  saveProgress();
+
+  // Move to next section
+  const idx = EXAM.sectionOrder.indexOf(section);
+  if (idx < EXAM.sectionOrder.length - 1) {
+    EXAM.currentSection = idx + 1;
+    loadSection(EXAM.sectionOrder[EXAM.currentSection]);
+  } else {
+    // All done — compute results
+    EXAM.currentSection = EXAM.sectionOrder.length; // all done
+    renderExamSidebar();
+    computeResults();
+    goScreen('results');
+  }
+}
+
+// ========== HELPERS ==========
+function extractQuestions(text) {
+  const questions = [];
+  // Match "1. Question stem" with options on subsequent lines
+  const blocks = text.split(/\n(?=\d{1,2}\s*[\.\)、])/);
+  for (const block of blocks) {
+    const m = block.match(/^(\d{1,2})\s*[\.\)、]\s*(.+)/);
+    if (!m) continue;
+    const num = m[1];
+    const rest = m[2];
+    // Extract options
+    const optRe = /([A-D])\s*[\.\)、]\s*(.+?)(?=\s*[A-D]\s*[\.\)、]|$)/g;
+    const options = [];
+    let om;
+    while ((om = optRe.exec(block)) !== null) {
+      options.push(om[2].trim());
+    }
+    questions.push({ num, stem: rest.trim(), options, passage: '' });
+  }
+  return questions;
+}
+
+function countWords(text) {
+  if (!text) return 0;
+  return text.split(/[\s\n]+/).filter(w => w.length > 0).length;
+}
+
+// ============================================================================
+// AUTO SAVE / RESTORE
+// ============================================================================
+function saveProgress() {
+  try {
+    const data = {
+      section: EXAM.currentSection,
+      sectionOrder: EXAM.sectionOrder,
+      answers: EXAM.answers,
+      elapsed: EXAM.elapsed,
+      submitted: EXAM.submitted,
+      hasAudio: EXAM.hasAudio,
+      paper: EXAM.paper,
+      _rawText: EXAM._rawText,
+      _listenIdx: EXAM._listenIdx,
+      _readIdx: EXAM._readIdx,
+      audioBlobExists: !!EXAM.audioBlob
+    };
+    localStorage.setItem('cet4_exam_state', JSON.stringify(data));
+  } catch(e) { /* quota exceeded, ignore */ }
+}
+
+function restoreProgress() {
+  try {
+    const raw = localStorage.getItem('cet4_exam_state');
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    EXAM.paper = data.paper;
+    EXAM.hasAudio = data.hasAudio;
+    EXAM.sectionOrder = data.sectionOrder;
+    EXAM.answers = data.answers;
+    EXAM.elapsed = data.elapsed;
+    EXAM.submitted = data.submitted;
+    EXAM.currentSection = data.section;
+    EXAM._rawText = data._rawText;
+    EXAM._listenIdx = data._listenIdx || 0;
+    EXAM._readIdx = data._readIdx || 0;
+    return true;
+  } catch(e) { return false; }
+}
+
+// ============================================================================
+// SCREEN 3: RESULTS (GRADING ENGINE)
+// ============================================================================
+function computeResults() {
+  const paper = EXAM.paper;
+  const ans = EXAM.answers;
+  const hasKey = paper.listening.answers && Object.keys(paper.listening.answers).length > 0;
+
+  // Writing: 15-point scale + grammar detection
+  const wErrors = detectGrammarErrors(ans.writing);
+  const wContentScore = estimateContentScore(ans.writing, paper.writing.prompt);
+  const wLangScore = Math.max(0, 8 - Math.min(8, wErrors.length));
+  const writing15 = Math.min(15, wContentScore + wLangScore);
+
+  // Translation: grammar detection
+  const tErrors = detectGrammarErrors(ans.translation);
+  const tContentScore = estimateContentScore(ans.translation, paper.translation.zh);
+  const tLangScore = Math.max(0, 8 - Math.min(8, tErrors.length));
+  const translation15 = Math.min(15, tContentScore + tLangScore);
+
+  // Listening
+  let lCorrect = 0, lTotal = 0;
+  const lDetails = [];
+  if (hasKey && ans.listening) {
+    for (const [num, correct] of Object.entries(paper.listening.answers)) {
+      lTotal++;
+      const user = (ans.listening[num] || '').toUpperCase();
+      const ok = user === correct.toUpperCase();
+      if (ok) lCorrect++;
+      lDetails.push({ num, user, correct, ok });
+    }
+  } else if (ans.listening) {
+    lTotal = Object.keys(ans.listening).length;
+    for (const [num, user] of Object.entries(ans.listening)) {
+      lDetails.push({ num, user: user || '', correct: '', ok: null });
+    }
+  }
+
+  // Reading — build word→letter map from banked cloze for answer mapping
+  let wordToLetter = {};
+  if (EXAM._readData && EXAM._readData.sections) {
+    for (const sec of EXAM._readData.sections) {
+      if (sec.type === 'cloze' && sec.wordBank) {
+        for (const b of sec.wordBank) {
+          wordToLetter[b.w.toUpperCase()] = b.l.toUpperCase();
+        }
+      }
+    }
+  }
+
+  let rCorrect = 0, rTotal = 0;
+  const rDetails = [];
+  if (hasKey && paper.reading.answers && ans.reading) {
+    for (const [num, correct] of Object.entries(paper.reading.answers)) {
+      rTotal++;
+      let user = (ans.reading[num] || '').toUpperCase();
+      // If user filled a word (banked cloze), map it to the letter for comparison
+      const mapped = wordToLetter[user];
+      if (mapped) user = mapped;
+      const ok = user === correct.toUpperCase();
+      if (ok) rCorrect++;
+      rDetails.push({ num, user, correct, ok });
+    }
+  } else if (ans.reading) {
+    rTotal = Object.keys(ans.reading).length;
+    for (const [num, user] of Object.entries(ans.reading)) {
+      let display = (user || '').toUpperCase();
+      const mapped = wordToLetter[display];
+      rDetails.push({ num, user: mapped || display, correct: '', ok: null });
+    }
+  }
+
+  // 710 scale
+  const w710 = Math.round(writing15 / 15 * 106.5);
+  const l710 = lTotal > 0 ? Math.round((lCorrect / lTotal) * 248.5) : 0;
+  const r710 = rTotal > 0 ? Math.round((rCorrect / rTotal) * 248.5) : 0;
+  const t710 = Math.round(translation15 / 15 * 106.5);
+  const total710 = w710 + (EXAM.hasAudio ? l710 : 0) + r710 + t710;
+
+  EXAM.results = {
+    total710, w710, l710, r710, t710, writing15, translation15,
+    wErrors, tErrors, lDetails, rDetails, lCorrect, lTotal, rCorrect, rTotal,
+    hasKey, hasAudio: EXAM.hasAudio
+  };
+
+  renderResults();
+}
+
+function detectGrammarErrors(text) {
+  if (!text || text.trim().length === 0) return [{ type: 'empty', msg: '未作答 — 提交内容为空，无法评分' }];
+  if (countWords(text) < 8) return [{ type: 'empty', msg: `内容过短 (仅${countWords(text)}词)，无法有效评分` }];
+  const errors = [];
+
+  // 1. Article check: singular countable nouns without articles
+  const articleRe = /\b(is|are|was|were|become|as|like|with|for|by|in|on|to|of|from)\s+([a-z]+)\b/gi;
+  let am;
+  const nounSuffix = /(tion|ment|ness|ity|ence|ance|ture|sion|er|or|ist|ent|ant)$/i;
+  // Fixed phrases that don't need an article
+  const fixedPhrases = new Set(['in conclusion', 'in summary', 'in addition', 'in fact', 'in general',
+    'in society', 'in nature', 'in life', 'in school', 'at school', 'at home', 'at work', 'by bus', 'by car']);
+  // Words that are commonly adjectives (not nouns needing articles)
+  const adjWords = new Set(['important', 'different', 'necessary', 'possible', 'difficult', 'essential',
+    'significant', 'valuable', 'useful', 'helpful', 'careful', 'successful', 'traditional', 'modern',
+    'recent', 'special', 'available', 'suitable', 'comfortable', 'reasonable', 'responsible']);
+  while ((am = articleRe.exec(text)) !== null) {
+    const word = am[2];
+    const phrase = am[0].toLowerCase();
+    if (fixedPhrases.has(phrase)) continue;
+    if (adjWords.has(word)) continue;
+    if (nounSuffix.test(word) && word.length > 5) {
+      errors.push({ type: 'article', msg: `"${am[0]}" → "${word}" 前可能缺少冠词 a/an/the`, context: am[0] });
+    }
+  }
+
+  // 2. S-V agreement: he/she/it + bare verb
+  const svRe = /\b(he|she|it|this|that|the\s+\w+)\s+(have|do|go|make|get|take|come|know|see|think|want|need|try)\b/gi;
+  let svm;
+  while ((svm = svRe.exec(text)) !== null) {
+    errors.push({ type: 'sv', msg: `"${svm[0]}" → 应为 "${svm[1]} ${svm[2]}s/has"（第三人称单数）`, context: svm[0] });
+  }
+
+  // 3. Collocation check
+  const wrongColloc = [
+    ['pay attention on', 'pay attention to'],
+    ['attach importance in', 'attach importance to'],
+    ['result to', 'result in'],
+    ['depend in', 'depend on'],
+    ['lead in', 'lead to'],
+    ['focus in', 'focus on'],
+    ['insist in', 'insist on'],
+    ['consist of', 'consist in'], // false positive, but keep for CET-4
+    ['succeed to', 'succeed in'],
+    ['participate into', 'participate in'],
+  ];
+  for (const [wrong, right] of wrongColloc) {
+    if (text.toLowerCase().includes(wrong)) {
+      errors.push({ type: 'collocation', msg: `"${wrong}" → 应为 "${right}"`, context: wrong });
+    }
+  }
+
+  // 4. Spelling: basic check against CET-4 common words
+  const commonWords = new Set([
+    'environment', 'government', 'education', 'technology', 'development', 'university',
+    'society', 'culture', 'tradition', 'experience', 'knowledge', 'important', 'different',
+    'because', 'believe', 'receive', 'achieve', 'success', 'necessary', 'possible',
+    'people', 'country', 'through', 'although', 'however', 'therefore', 'modern',
+    'economy', 'science', 'language', 'student', 'teacher', 'practice', 'exercise'
+  ]);
+  const textWords = text.toLowerCase().split(/[\s.,;:!?()"]+/).filter(w => w.length > 3);
+  const seen = new Set();
+  for (const w of textWords) {
+    if (seen.has(w)) continue;
+    seen.add(w);
+    for (const correct of commonWords) {
+      if (Math.abs(w.length - correct.length) <= 2 && w !== correct) {
+        // Skip common plural forms (word+s, word+es, word→ies)
+        if (w === correct + 's' || w === correct + 'es') continue;
+        if (correct.endsWith('y') && w === correct.slice(0, -1) + 'ies') continue;
+        if (levenshtein(w, correct) <= 1) {
+          errors.push({ type: 'spelling', msg: `"${w}" → 正确拼写为 "${correct}"?`, context: w });
+        }
+      }
+    }
+  }
+
+  // 5. Chinglish patterns
+  const chinglish = [
+    ['study until you die', 'live and learn / lifelong learning'],
+    ['life learning', 'lifelong learning'],
+    ['more and more people', 'an increasing number of people'],
+    ['let more people know', 'raise public awareness of'],
+    ['with the development of', 'with the development of'], // acceptable but flag overuse
+    ['in the modern society', 'in modern society'],
+    ['every coin has two sides', 'there are both advantages and disadvantages'],
+    ['last but not least', 'lastly / finally'],
+  ];
+  for (const [wrong, right] of chinglish) {
+    if (text.toLowerCase().includes(wrong) && wrong !== 'with the development of') {
+      errors.push({ type: 'chinglish', msg: `"${wrong}" → 建议 "${right}"（避免中式英语）`, context: wrong });
+    }
+  }
+
+  // 6. Tense: basic time signal check
+  const tenseChecks = [
+    [/\b(yesterday|last\s+\w+|ago|in\s+\d{4})\b/i, 'past', '过去时'],
+    [/\b(since|for\s+\d+\s+years|already|yet|recently)\b/i, 'perfect', '现在完成时'],
+    [/\b(now|currently|at\s+present|these\s+days)\b/i, 'progressive', '现在进行时'],
+  ];
+  for (const [re, expected, label] of tenseChecks) {
+    if (re.test(text)) {
+      // Simple check: look for -ing, have/has + past participle, or past tense verbs
+      const hasExpectedTense = expected === 'past' ? /\b(was|were|did|[a-z]+ed)\b/i.test(text) :
+        expected === 'perfect' ? /\b(have|has)\s+[a-z]+(ed|en|t|d)\b/i.test(text) :
+        expected === 'progressive' ? /\b(am|is|are)\s+[a-z]+ing\b/i.test(text) : true;
+      if (!hasExpectedTense) {
+        errors.push({ type: 'tense', msg: `"${re.source}" 提示需要${label}，但未检测到相应时态`, context: text.match(re)[0] });
+      }
+    }
+  }
+
+  return errors;
+}
+
+function estimateContentScore(text, prompt) {
+  if (!text || text.trim().length === 0) return 0;
+  if (text.trim().length < 20) return 1;
+  const len = countWords(text);
+  const promptLen = prompt ? countWords(prompt) : 0;
+  // Keyword coverage: check for key content words from prompt
+  let coverage = 0;
+  if (promptLen > 0) {
+    const promptWords = prompt.toLowerCase().split(/[\s.,;:!?()"]+/).filter(w => w.length > 4);
+    const textLower = text.toLowerCase();
+    let matched = 0;
+    for (const w of promptWords) {
+      if (textLower.includes(w)) matched++;
+    }
+    coverage = Math.min(7, Math.round(matched / Math.max(1, promptWords.length) * 7));
+  } else {
+    // Fallback: length-based
+    coverage = Math.min(7, Math.floor(len / 20));
+  }
+  return coverage;
+}
+
+function levenshtein(a, b) {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => Array.from({ length: b.length + 1 }, (_, j) => i === 0 ? j : j === 0 ? i : 0));
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+function renderResults() {
+  const r = EXAM.results;
+  const el = document.getElementById('results-body');
+
+  // Score circle
+  let level = 'bad', levelText = '未通过 (425线)';
+  if (r.total710 >= 500) { level = 'good'; levelText = '通过 (425线)'; }
+  else if (r.total710 >= 425) { level = 'ok'; levelText = '通过 (425线)'; }
+
+  // No answer key info
+  let noAnsHTML = '';
+  if (!r.hasKey) {
+    noAnsHTML = `
+    <div class="no-ans">
+      <div class="no-icon">⚠️</div>
+      <h3>你没有提供答案，无法分析成绩</h3>
+      <p>你可以把 MD 文件发送给你的 AI 助手帮你分析，<br>里面包含了所有题目、你的答案和语法检测结果。</p>
+      <button class="btn btn-primary" onclick="downloadMD()">📥 下载详细 MD 报告</button>
+    </div>`;
+  }
+
+  el.innerHTML = noAnsHTML + `
+    ${r.hasKey ? `
+    <div class="score-hero">
+      <div class="score-ring ${level}"><div class="big">${r.total710}</div><div class="sub">/ 710</div></div>
+      <p style="font-size:15px;font-weight:700;color:${level === 'good' ? '#16a34a' : level === 'ok' ? '#ea580c' : '#dc2626'}">${level === 'good' ? '🎉 ' : ''}${levelText}</p>
+    </div>
+    <div class="score-grid">
+      <div class="score-row"><div class="sr-label">写作 Writing</div><div class="sr-val">${r.w710}<span style="font-size:11px;color:#94a3b8">/106.5</span></div><div class="sr-bar"><div class="sr-fill" style="width:${Math.round(r.w710/106.5*100)}%;background:#2563eb"></div></div></div>
+      ${r.hasAudio ? `<div class="score-row"><div class="sr-label">听力 Listening</div><div class="sr-val">${r.l710}<span style="font-size:11px;color:#94a3b8">/248.5</span></div><div class="sr-bar"><div class="sr-fill" style="width:${Math.round(r.l710/248.5*100)}%;background:#16a34a"></div></div></div>` : '<div class="score-row"><div class="sr-label">听力 Listening</div><div class="sr-val" style="color:#94a3b8">跳过</div></div>'}
+      <div class="score-row"><div class="sr-label">阅读 Reading</div><div class="sr-val">${r.r710}<span style="font-size:11px;color:#94a3b8">/248.5</span></div><div class="sr-bar"><div class="sr-fill" style="width:${Math.round(r.r710/248.5*100)}%;background:#ea580c"></div></div></div>
+      <div class="score-row"><div class="sr-label">翻译 Translation</div><div class="sr-val">${r.t710}<span style="font-size:11px;color:#94a3b8">/106.5</span></div><div class="sr-bar"><div class="sr-fill" style="width:${Math.round(r.t710/106.5*100)}%;background:#8b5cf6"></div></div></div>
+    </div>
+    ` : ''}
+
+    <!-- Writing errors -->
+    <hr>
+    <h3 style="margin-bottom:8px">写作 · 语法检测 (15分制: ${r.writing15}分)${!r.hasKey ? ' — 以下检测结果已包含在 MD 报告中' : ''}</h3>
+    ${renderErrorList(r.wErrors)}
+
+    <!-- Listening -->
+    ${r.hasAudio ? (
+      r.hasKey && r.lDetails.length > 0 ? `
+    <hr>
+    <h3 style="margin-bottom:8px">听力 · 正确 ${r.lCorrect}/${r.lTotal}</h3>
+    <div class="q-grid">${r.lDetails.map(d => `<span class="q-chip ${d.ok === true ? 'ok' : d.ok === false ? 'fail' : 'na'}">${d.num} ${d.ok === true ? '✓' : d.ok === false ? '✗' : '-'}</span>`).join('')}</div>
+    ${r.lDetails.filter(d => d.ok === false).length > 0 ? `<p class="text-muted mt">${r.lDetails.filter(d => d.ok === false).map(d => `Q${d.num}: 你选 ${d.user} → 正确答案 ${d.correct}`).join(' &nbsp;|&nbsp; ')}</p>` : ''}
+      ` : ''
+    ) : ''}
+
+    <!-- Reading -->
+    ${r.hasKey && r.rDetails.length > 0 ? `
+    <hr>
+    <h3 style="margin-bottom:8px">阅读 · 正确 ${r.rCorrect}/${r.rTotal}</h3>
+    <div class="q-grid">${r.rDetails.map(d => `<span class="q-chip ${d.ok === true ? 'ok' : d.ok === false ? 'fail' : 'na'}">${d.num} ${d.ok === true ? '✓' : d.ok === false ? '✗' : '-'}</span>`).join('')}</div>
+    ${r.rDetails.filter(d => d.ok === false).length > 0 ? `<p class="text-muted mt">${r.rDetails.filter(d => d.ok === false).map(d => `Q${d.num}: 你选 ${d.user} → 正确答案 ${d.correct}`).join(' &nbsp;|&nbsp; ')}</p>` : ''}
+    ` : ''}
+
+    <!-- Translation errors -->
+    <hr>
+    <h3 style="margin-bottom:8px">翻译 · 语法检测 (15分制: ${r.translation15}分)</h3>
+    ${renderErrorList(r.tErrors)}
+
+    <!-- Export buttons -->
+    <div class="flex gap mt-lg" style="justify-content:center">
+      <button class="btn btn-primary" onclick="downloadDOCX()">📥 下载 DOCX 成绩单</button>
+      <button class="btn btn-outline" onclick="downloadMD()">📥 下载 MD 详细报告</button>
+    </div>
+  `;
+}
+
+function renderErrorList(errors) {
+  if (errors.length === 0) return '<p style="font-size:13px;color:#16a34a">✅ 未检测到明显错误</p>';
+  const colors = { article: 'et-red', sv: 'et-red', collocation: 'et-orange', spelling: 'et-yellow', chinglish: 'et-orange', tense: 'et-yellow' };
+  const labels = { article: '冠词', sv: '主谓一致', collocation: '搭配', spelling: '拼写', chinglish: '中式英语', tense: '时态' };
+  return `<div class="err-list">${errors.map(e => `<div class="err-row"><span class="err-tag ${colors[e.type] || 'et-yellow'}">${labels[e.type] || e.type}</span><span>${e.msg}</span></div>`).join('')}</div>`;
+}
+
+// ============================================================================
+// SCREEN 4: EXPORT (DOCX + MD)
+// ============================================================================
+function downloadDOCX() {
+  if (!EXAM.results) { alert('请先完成考试'); return; }
+
+  const r = EXAM.results;
+
+  // Fallback: use native XML generation if docx library not loaded
+  if (typeof docx === 'undefined' || !docx.Document) {
+    const xml = generateNativeDOCX(r);
+    const blob = new Blob([xml], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    saveFile(blob, 'CET4_成绩单_' + new Date().toISOString().slice(0,10) + '.docx');
+    return;
+  }
+
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, AlignmentType } = docx;
+
+  const children = [
+    new Paragraph({ text: 'CET-4 模拟考试成绩单', heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER }),
+    new Paragraph({ text: `考试日期: ${new Date().toLocaleDateString('zh-CN')}`, spacing: { after: 200 } }),
+    new Paragraph({ text: `总分: ${r.total710} / 710${r.total710 >= 425 ? ' (通过)' : ' (未通过)'}`, bold: true, spacing: { after: 200 } }),
+    new Paragraph({ text: '各题型得分', heading: HeadingLevel.HEADING_2 }),
+  ];
+
+  // Score table
+  const rows = [
+    new TableRow({ children: ['题型', '得分', '满分', '正确率'].map(h => new TableCell({ children: [new Paragraph({ text: h, bold: true })] })) }),
+    new TableRow({ children: ['写作', String(r.w710), '106.5', Math.round(r.w710/106.5*100)+'%'].map(t => new TableCell({ children: [new Paragraph(t)] })) }),
+    new TableRow({ children: ['听力', r.hasAudio ? String(r.l710) : '跳过', '248.5', r.hasAudio ? Math.round(r.l710/248.5*100)+'%' : '-'].map(t => new TableCell({ children: [new Paragraph(t)] })) }),
+    new TableRow({ children: ['阅读', String(r.r710), '248.5', Math.round(r.r710/248.5*100)+'%'].map(t => new TableCell({ children: [new Paragraph(t)] })) }),
+    new TableRow({ children: ['翻译', String(r.t710), '106.5', Math.round(r.t710/106.5*100)+'%'].map(t => new TableCell({ children: [new Paragraph(t)] })) }),
+  ];
+  children.push(new Table({ rows }));
+
+  children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
+  children.push(new Paragraph({ text: '语法检测摘要', heading: HeadingLevel.HEADING_2 }));
+  children.push(new Paragraph({ text: `写作检测到 ${r.wErrors.length} 处问题。翻译检测到 ${r.tErrors.length} 处问题。`, spacing: { after: 100 } }));
+
+  if (r.hasKey) {
+    children.push(new Paragraph({ text: `听力正确率: ${r.lCorrect}/${r.lTotal}`, spacing: { after: 100 } }));
+    children.push(new Paragraph({ text: `阅读正确率: ${r.rCorrect}/${r.rTotal}`, spacing: { after: 100 } }));
+  }
+
+  children.push(new Paragraph({ text: '等级: ' + (r.total710 >= 500 ? '良好' : r.total710 >= 425 ? '通过' : '未通过'), bold: true }));
+
+  new Document({ sections: [{ children }] });
+  // Actually we need to use Packer
+  Packer.toBlob(new Document({ sections: [{ children }] })).then(blob => {
+    saveFile(blob, 'CET4_成绩单_' + new Date().toISOString().slice(0,10) + '.docx');
+  });
+}
+
+function downloadMD() {
+  if (!EXAM.results) { alert('请先完成考试'); return; }
+
+  const r = EXAM.results;
+  const paper = EXAM.paper;
+  const ans = EXAM.answers;
+
+  // ---------- build question lookup map ----------
+  const qMap = {};
+  if (paper.listening && paper.listening.sections) {
+    for (const ls of paper.listening.sections) {
+      const lqs = extractQuestions(ls.text);
+      for (const q of lqs) qMap[q.num] = { stem: q.stem, options: q.options, type: 'listening', section: ls.name };
+    }
+  }
+  let readSections = null;
+  if (EXAM._readData && EXAM._readData.sections) {
+    readSections = EXAM._readData.sections;
+    for (const sec of readSections) {
+      if (sec.type === 'cloze') {
+        for (const q of (sec.questions || [])) qMap[q.num] = { stem: q.stem, options: [], type: 'cloze' };
+      } else if (sec.type === 'match') {
+        for (const q of (sec.questions || [])) qMap[q.num] = { stem: q.stem, options: [], type: 'match' };
+      } else {
+        for (const q of (sec.questions || [])) qMap[q.num] = { stem: q.stem, options: q.options || [], type: 'careful' };
+      }
+    }
+  }
+  function fmtQ(d) {
+    const qi = qMap[d.num];
+    let lines = [];
+    const stem = (qi && qi.stem) ? qi.stem : '';
+    if (stem && stem !== '第 ' + d.num + ' 空') lines.push('Q' + d.num + '. ' + stem);
+    else lines.push('Q' + d.num + '.');
+    if (qi && qi.options && qi.options.length > 0) {
+      lines.push('    ' + qi.options.map(function(o, i) { return String.fromCharCode(65+i) + ') ' + o; }).join('  '));
+    }
+    var status = d.ok === true ? '✓' : d.ok === false ? '✗' : '?';
+    lines.push('    学生: ' + (d.user || '(空)') + ' | 正确: ' + d.correct + ' | ' + status);
+    return lines.join('\n');
+  }
+
+  var readSecMD = '';
+  if (readSections) {
+    for (var si = 0; si < readSections.length; si++) {
+      var sec = readSections[si];
+      readSecMD += '\n### ' + sec.title + '\n';
+      if (sec.type === 'cloze') {
+        readSecMD += '\n**原文:** ' + (sec.passage || '') + '\n';
+        if (sec.wordBank && sec.wordBank.length > 0) {
+          readSecMD += '\n**备选词:** ' + sec.wordBank.map(function(b) { return b.l + ') ' + b.w; }).join('  ') + '\n';
+        }
+      } else if (sec.type === 'match') {
+        if (sec.paragraphs && sec.paragraphs.length > 0) {
+          readSecMD += '\n**段落:**\n' + sec.paragraphs.map(function(p) { return p.l + ') ' + p.t; }).join('\n') + '\n';
+        }
+      } else if (sec.type === 'careful') {
+        readSecMD += '\n**原文:** ' + (sec.passage || '') + '\n';
+      }
+    }
+  }
+
+  var readDetailMD = '';
+  if (r.hasKey && r.rDetails.length > 0) {
+    readDetailMD = '\n### 答题详情\n';
+    var clozeQs = r.rDetails.filter(function(d) { return qMap[d.num] && qMap[d.num].type === 'cloze'; });
+    var matchQs = r.rDetails.filter(function(d) { return qMap[d.num] && qMap[d.num].type === 'match'; });
+    var carefulQs = r.rDetails.filter(function(d) { return qMap[d.num] && qMap[d.num].type === 'careful'; });
+    var otherQs = r.rDetails.filter(function(d) { return !qMap[d.num]; });
+    if (clozeQs.length > 0) readDetailMD += '\n**选词填空:**\n' + clozeQs.map(fmtQ).join('\n') + '\n';
+    if (matchQs.length > 0) readDetailMD += '\n**段落匹配:**\n' + matchQs.map(fmtQ).join('\n') + '\n';
+    if (carefulQs.length > 0) readDetailMD += '\n**仔细阅读:**\n' + carefulQs.map(fmtQ).join('\n') + '\n';
+    if (otherQs.length > 0) readDetailMD += '\n**其他:**\n' + otherQs.map(fmtQ).join('\n') + '\n';
+    readDetailMD += '\n### 统计\n- 正确: ' + r.rCorrect + ' / ' + r.rTotal + '\n- 正确率: ' + Math.round(r.rCorrect/r.rTotal*100) + '%\n';
+  } else if (r.rDetails.length > 0) {
+    readDetailMD = '\n### 答题详情（无答案，仅记录）\n' + r.rDetails.map(fmtQ).join('\n') + '\n';
+  }
+
+  var listenMD = '';
+  if (r.hasAudio && r.hasKey) {
+    listenMD = '\n### 答题详情\n' + r.lDetails.map(fmtQ).join('\n') + '\n\n### 统计\n- 正确: ' + r.lCorrect + ' / ' + r.lTotal + '\n- 正确率: ' + Math.round(r.lCorrect/r.lTotal*100) + '%\n';
+  } else if (r.hasAudio) {
+    listenMD = '\n### 答题详情（无答案，仅记录）\n' + r.lDetails.map(fmtQ).join('\n') + '\n';
+  }
+
+  let md = `# SYSTEM INSTRUCTION — 请先阅读
+
+你是一位经验丰富的中国大学英语四级（CET-4）备考辅导专家。请基于下方考试数据，为学生生成一份详细的成绩分析报告。
+
+## 你的任务
+1. 逐题型分析学生的得分情况和薄弱环节
+2. 对写作和翻译中的语法错误进行分类统计和讲解，每种类型至少举1个具体例句说明
+3. 针对听力/阅读错题，分析可能的出错原因（词汇量？理解偏差？逻辑判断？）
+4. 给出具体可操作的备考建议（不要泛泛而谈，要具体到题型和方法）
+5. 预测如果按照你的建议针对性复习 1 周，预计能提分多少
+
+## 输出格式要求
+- 用中文输出，关键术语保留英文
+- 先总览后分题型，结构清晰
+- 每个错误类型给出 1 个具体例句纠正（学生原文 → 正确写法）
+- 建议按优先级排序，最多 5 条
+- 语气：老师对学生的鼓励式，但要直击问题
+
+---
+
+# 学生考试数据
+
+## 基本概况
+- 考试日期: ${new Date().toLocaleDateString('zh-CN')}
+- 试卷来源: PDF导入
+- 是否提供标准答案: ${r.hasKey ? '是' : '否（听力/阅读无法自动判分）'}
+- 是否包含听力: ${r.hasAudio ? '是' : '否（跳过）'}
+- 各Section用时: 写作${Math.floor(EXAM.elapsed.writing/60)}分${EXAM.elapsed.writing%60}秒 / 听力${EXAM.hasAudio ? Math.floor(EXAM.elapsed.listening/60)+'分'+EXAM.elapsed.listening%60+'秒' : '跳过'} / 阅读${Math.floor(EXAM.elapsed.reading/60)}分${EXAM.elapsed.reading%60}秒 / 翻译${Math.floor(EXAM.elapsed.translation/60)}分${EXAM.elapsed.translation%60}秒
+${r.hasKey ? `
+## 得分总览
+- 总分: ${r.total710} / 710 (${r.total710 >= 425 ? '通过' : '未通过'})
+- 写作: ${r.w710} / 106.5 (15分制: ${r.writing15}/15)
+- 听力: ${r.hasAudio ? r.l710 + ' / 248.5 (正确' + r.lCorrect + '/' + r.lTotal + ')' : '跳过'}
+- 阅读: ${r.r710} / 248.5 (正确${r.rCorrect}/${r.rTotal})
+- 翻译: ${r.t710} / 106.5 (15分制: ${r.translation15}/15)
+` : `
+## 得分说明
+⚠ 未提供标准答案，听力/阅读无法自动判分。以下仅展示写作和翻译的语法检测参考分数。
+- 写作参考分 (15分制): ${r.writing15}/15
+- 翻译参考分 (15分制): ${r.translation15}/15
+`}
+## 写作 (Writing)
+
+### 题目
+${paper.writing.prompt || '(未识别)'}
+
+### 学生作文全文
+\`\`\`
+${ans.writing || '(未作答)'}
+\`\`\`
+
+### 语法检测结果 (共 ${r.wErrors.length} 处)
+${r.wErrors.length > 0 ? '| 序号 | 类型 | 说明 |\n|------|------|------|\n' + r.wErrors.map((e, i) => `| ${i+1} | ${e.type} | ${e.msg} |`).join('\n') : '未检测到明显语法错误。'}
+
+## 听力 (Listening)
+${r.hasAudio ? listenMD : '听力部分已跳过（未上传音频）。'}
+
+## 阅读 (Reading)
+${readSecMD}
+${readDetailMD}
+
+## 翻译 (Translation)
+
+### 原文
+${paper.translation.zh || '(未识别)'}
+
+### 学生译文全文
+\`\`\`
+${ans.translation || '(未作答)'}
+\`\`\`
+
+### 语法检测结果 (共 ${r.tErrors.length} 处)
+${r.tErrors.length > 0 ? '| 序号 | 类型 | 说明 |\n|------|------|------|\n' + r.tErrors.map((e, i) => `| ${i+1} | ${e.type} | ${e.msg} |`).join('\n') : '未检测到明显语法错误。'}
+
+---
+
+> 以上数据由 CET-4 全真模拟考试平台自动生成。请根据这些数据为学生提供详细的成绩分析和备考建议。
+`;
+
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  saveFile(blob, 'CET4_详细报告_' + new Date().toISOString().slice(0,10) + '.md');
+}// INIT
+// ============================================================================
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function saveFile(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function generateNativeDOCX(r) {
+  // Generate minimal DOCX using raw XML (no external library needed)
+  const bodyXml = `
+    <w:p><w:r><w:rPr><w:b/><w:sz w:val="48"/></w:rPr><w:t>CET-4 模拟考试成绩单</w:t></w:r></w:p>
+    <w:p><w:r><w:t>日期: ${new Date().toLocaleDateString('zh-CN')}</w:t></w:r></w:p>
+    <w:p><w:r><w:t>总分: ${r.total710} / 710 ${r.total710 >= 425 ? '(通过)' : '(未通过)'}</w:t></w:r></w:p>
+    <w:p><w:r><w:t>写作: ${r.w710}/106.5 | 听力: ${r.hasAudio ? r.l710+'/248.5' : '跳过'} | 阅读: ${r.r710}/248.5 | 翻译: ${r.t710}/106.5</w:t></w:r></w:p>
+    <w:p><w:r><w:t>写作语法问题: ${r.wErrors.length}处 | 翻译语法问题: ${r.tErrors.length}处</w:t></w:r></w:p>
+    <w:p><w:r><w:t>等级: ${r.total710 >= 500 ? '良好' : r.total710 >= 425 ? '通过' : '未通过'}</w:t></w:r></w:p>
+  `;
+
+  const xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>${bodyXml}</w:body></w:document>`;
+
+  return xml;
+}
+
+// Try restore on load
+window.addEventListener('DOMContentLoaded', () => {
+  const restored = restoreProgress();
+  if (restored && EXAM.paper) {
+    // review-card is now always visible
+    renderReview(EXAM.paper);
+    updateEstTime();
+    if (EXAM.answers && (EXAM.answers.writing || Object.keys(EXAM.answers.listening || {}).length > 0)) {
+      // In the middle of exam
+    }
+  }
+});
+
+// Keyboard shortcut for global screen nav
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key >= '1' && e.key <= '4') {
+    e.preventDefault();
+    const screens = ['import', 'exam', 'results', 'export'];
+    goScreen(screens[parseInt(e.key) - 1]);
+  }
+});
+</script>
+
+</body>
+</html>
