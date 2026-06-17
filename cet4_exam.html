@@ -285,7 +285,7 @@ hr { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
     <p class="sub">两份报告包含完整答题数据。MD 报告可直接发给 AI 助手深度分析。</p>
     <div class="export-cols">
       <div class="export-card">
-        <h3>📄 DOCX 成绩单</h3>
+        <h3>DOCX 成绩单</h3>
         <ul>
           <li>总分 & 等级判定</li>
           <li>各题型得分明细</li>
@@ -295,7 +295,7 @@ hr { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
         <button class="btn btn-primary btn-block" onclick="downloadDOCX()">下载 .docx</button>
       </div>
       <div class="export-card">
-        <h3>🤖 MD 详细报告</h3>
+        <h3>MD 详细报告</h3>
         <ul>
           <li>内置 AI 分析提示词</li>
           <li>完整题目 + 你的答案</li>
@@ -1767,7 +1767,7 @@ function downloadMD() {
 
 ## 你的任务
 
-请基于下方的学生考试数据，生成一份详细的成绩分析报告。报告需包含以下五个部分：
+请基于下方的学生考试数据，生成一份非常详细的成绩分析报告。报告需包含以下五个部分：
 
 ### 1. 总览分析
 - 根据总分（710分制）判断学生当前水平：425分以下 = 需要重点突破，425-500分 = 有通过基础但需巩固，500分以上 = 争取高分
@@ -1813,7 +1813,7 @@ function downloadMD() {
 ## 输出格式要求
 - 全部用中文输出，关键术语保留英文（如 S-V agreement、Chinglish 等）
 - 先总览后分题型，使用清晰的标题层级
-- 每个语法错误纠正格式：学生原文 → 正确写法 + 一句话原因
+- 每个语法错误纠正格式：学生原文 → 正确写法 + 详细的原因
 - 建议按优先级从高到低排列
 - 语气：直接、专业、像老师对学生的谈话。不要虚假鼓励，不要回避问题
 
@@ -1823,6 +1823,7 @@ function downloadMD() {
 - 不要只批评不给方案——每条批评后面必须跟具体的改进方法
 - 不要在分析错题时说"可能是粗心"——永远假设是能力不足导致的错误
 - 不要说"你可以的""加油"等没有信息量的鼓励
+- 说的语言可以不委婉，但必须专业且有建设性
 
 ---
 
