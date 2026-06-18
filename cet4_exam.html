@@ -226,7 +226,7 @@ hr { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
       <div class="dz-hint" id="pdf-hint">支持 .pdf · 纯本地解析</div>
       <button class="btn btn-outline" style="margin-top:12px" onclick="event.stopPropagation();document.getElementById('pdf-inp').click()">选择 PDF 文件</button>
     </div>
-    <input type="file" id="pdf-inp" accept=".pdf" style="position:absolute;left:-9999px" onchange="handlePDF(event)">
+    <input type="file" id="pdf-inp" accept=".pdf" style="display:none" onchange="handlePDF(event)">
   </div>
 
   <div class="card" id="review-card">
@@ -426,8 +426,8 @@ function parseExamPaper(text, numPages) {
     sections[mode] += currentText.join('\n');
   }
 
-  paper.writing.prompt = cleanText(sections.writing);
-  paper.translation.zh = cleanText(sections.translation);
+  paper.writing.prompt = cleanText(sections.writing, 'writing');
+  paper.translation.zh = cleanText(sections.translation, 'translation');
 
   // Parse listening section
   const listenSecNames = ['Section A', 'Section B', 'Section C'];
@@ -444,6 +444,9 @@ function parseExamPaper(text, numPages) {
     lsecs = [{ name: 'Listening', text: sections.listening }];
   }
   paper.listening.sections = lsecs;
+  for (const sec of paper.listening.sections) {
+    sec.text = sec.text.replace(/===PAGE \d+===/g, '');
+  }
 
   // Clean reading — remove page markers
   paper.reading._raw = sections.reading.replace(/===PAGE \d+===/g, '');
@@ -475,9 +478,13 @@ function parseExamPaper(text, numPages) {
   EXAM._rawText = text;
 }
 
-function cleanText(s) {
-  return s.replace(/===PAGE \d+===/g, '')
-    .replace(/Part I Writing\s*-\s*Reference Essay:[\s\S]*/gi, '')
+function cleanText(s, section) {
+  let t = s.replace(/===PAGE \d+===/g, '');
+  if (section === 'translation') {
+    t = t.replace(/^Part\s+(?:IV|4)\s+Translation[^\n]*$\n?/gim, '')
+         .replace(/^Directions?:[^\n]*$\n?/gim, '');
+  }
+  return t.replace(/Part I Writing\s*-\s*Reference Essay:[\s\S]*/gi, '')
     .replace(/Part IV Translation\s*-\s*Reference:[\s\S]*/gi, '')
     .replace(/[参参][考考][答答][案案][\s\S]*/g, '')
     .replace(/\n{3,}/g, '\n\n').trim();
@@ -604,6 +611,12 @@ function updateEstTime() {
 // ============================================================================
 function startExam() {
   if (!EXAM.paper) { alert('请先导入试卷 PDF'); return; }
+  // Confirmation
+  const totalTime = EXAM.hasAudio ? 125 : 100;
+  const struct = EXAM.hasAudio
+    ? '写作 (30min) → 听力 (25min) → 阅读 (40min) → 翻译 (30min)'
+    : '写作 (30min) → 阅读 (40min) → 翻译 (30min)';
+  if (!confirm('即将开始 CET-4 模拟考试\n\n' + struct + '\n\n总时长：约 ' + totalTime + ' 分钟\n\n计时器将立即启动。确定开始吗？')) return;
   // Always set section order based on hasAudio (overrides stale localStorage restore)
   if (EXAM.hasAudio) {
     EXAM.sectionOrder = ['writing', 'listening', 'reading', 'translation'];
@@ -892,6 +905,32 @@ function buildReadSections(raw) {
     const sRe = /(?:^|\n)\s*(3[6-9]|4[0-1])\s*[\.\)、]\s*(.{15,}?)(?=\s*(?:\n\s*(?:3[6-9]|4[0-1]|[A-G])\s*[\.\)、])|$)/gs;
     while ((sm2 = sRe.exec(bClean)) !== null) stmts.push({ n: sm2[1], t: sm2[2].trim() });
     const qs2 = stmts.map(s => ({ num: s.n, stem: s.t }));
+    // Detect implicit Section C: if paragraph G text contains Q46-50, split it
+    if (!chunks.C) {
+      // Find the REAL paragraph G (last one with letter G, ignoring A-D from MCQ options)
+      const gPara = paras.filter(p => p.l === 'G').pop();
+      if (gPara) {
+        const q46Idx = gPara.t.search(/(?:^|\n)\s*46\s*[\.\)、]/m);
+        if (q46Idx > 0) {
+          const before = gPara.t.slice(0, q46Idx);
+          const passageBreak = before.search(/\.\s+(?:The\s+|How\s+|Many\s+|Some\s+|Unlike\s+|This\s+|These\s+|In\s+the\s+|According\s+to\s+|A\s+recent\s+)/);
+          if (passageBreak > 0) {
+            chunks.C = gPara.t.slice(passageBreak + 2);
+            gPara.t = gPara.t.slice(0, passageBreak + 1).trim();
+          } else {
+            // Fallback: split at Q46
+            chunks.C = gPara.t.slice(q46Idx);
+            gPara.t = gPara.t.slice(0, q46Idx).replace(/\.\s*$/, '').trim();
+          }
+          // Remove fake "paragraphs" that are actually Section C MCQ options (A-D)
+          // Regex [A-G] incorrectly matches Q46-50 options A/B/C/D as paragraphs
+          const gIdx = paras.indexOf(gPara);
+          if (gIdx >= 0 && gIdx < paras.length - 1) {
+            paras.length = gIdx + 1;
+          }
+        }
+      }
+    }
     if (qs2.length > 0) {
       sects.push({ type: 'match', title: '段落匹配 (Section B)', paragraphs: paras, questions: qs2 });
     }
@@ -1195,6 +1234,8 @@ function submitSection(section) {
 // ========== HELPERS ==========
 function extractQuestions(text) {
   const questions = [];
+  // Clean any lingering page markers
+  text = text.replace(/===PAGE \d+===/g, '');
   // Match "1. Question stem" with options on subsequent lines
   const blocks = text.split(/\n(?=\d{1,2}\s*[\.\)、])/);
   for (const block of blocks) {
@@ -1210,6 +1251,19 @@ function extractQuestions(text) {
       options.push(om[2].trim());
     }
     questions.push({ num, stem: rest.trim(), options, passage: '' });
+  }
+  // Post-process: fill missing D (4th option) from orphan lines
+  for (let i = 0; i < questions.length; i++) {
+    if (questions[i].options.length === 3 && i + 1 < questions.length) {
+      // Check if next question's stem starts with a D) pattern (orphan option)
+      const nextStem = questions[i + 1].stem;
+      const dMatch = nextStem.match(/^([Dd])\s*[\.\)、]\s*(.+)/);
+      if (dMatch) {
+        questions[i].options.push(dMatch[2].trim());
+        // Remove the D option from the next question's stem
+        questions[i + 1].stem = nextStem.slice(dMatch[0].length).trim();
+      }
+    }
   }
   return questions;
 }
@@ -1363,7 +1417,8 @@ function detectGrammarErrors(text) {
   // Words that are commonly adjectives (not nouns needing articles)
   const adjWords = new Set(['important', 'different', 'necessary', 'possible', 'difficult', 'essential',
     'significant', 'valuable', 'useful', 'helpful', 'careful', 'successful', 'traditional', 'modern',
-    'recent', 'special', 'available', 'suitable', 'comfortable', 'reasonable', 'responsible']);
+    'recent', 'special', 'available', 'suitable', 'comfortable', 'reasonable', 'responsible',
+    'flexibility', 'ability', 'knowledge', 'information', 'advice', 'progress', 'research', 'evidence']);
   while ((am = articleRe.exec(text)) !== null) {
     const word = am[2];
     const phrase = am[0].toLowerCase();
@@ -1406,7 +1461,8 @@ function detectGrammarErrors(text) {
     'society', 'culture', 'tradition', 'experience', 'knowledge', 'important', 'different',
     'because', 'believe', 'receive', 'achieve', 'success', 'necessary', 'possible',
     'people', 'country', 'through', 'although', 'however', 'therefore', 'modern',
-    'economy', 'science', 'language', 'student', 'teacher', 'practice', 'exercise'
+    'economy', 'science', 'language', 'student', 'teacher', 'practice', 'exercise',
+    'teach', 'study', 'learn', 'work', 'play', 'help'
   ]);
   const textWords = text.toLowerCase().split(/[\s.,;:!?()"]+/).filter(w => w.length > 3);
   const seen = new Set();
@@ -1418,6 +1474,14 @@ function detectGrammarErrors(text) {
         // Skip common plural forms (word+s, word+es, word→ies)
         if (w === correct + 's' || w === correct + 'es') continue;
         if (correct.endsWith('y') && w === correct.slice(0, -1) + 'ies') continue;
+        // Strip common inflection suffixes and check base form
+        let wBase = w;
+        if (wBase.endsWith('ies') && wBase.length > 3) wBase = wBase.slice(0, -3) + 'y';
+        else if (wBase.endsWith('es') && wBase.length > 2) wBase = wBase.slice(0, -2);
+        else if (wBase.endsWith('s') && !wBase.endsWith('ss') && wBase.length > 2) wBase = wBase.slice(0, -1);
+        else if (wBase.endsWith('ed') && wBase.length > 3) wBase = wBase.slice(0, -2);
+        else if (wBase.endsWith('ing') && wBase.length > 4) wBase = wBase.slice(0, -3);
+        if (wBase === correct || commonWords.has(wBase)) continue;
         if (levenshtein(w, correct) <= 1) {
           errors.push({ type: 'spelling', msg: `"${w}" → 正确拼写为 "${correct}"?`, context: w });
         }
@@ -1481,6 +1545,10 @@ function estimateContentScore(text, prompt) {
   } else {
     // Fallback: length-based
     coverage = Math.min(7, Math.floor(len / 20));
+  }
+  // Length penalty: CET-4 writing minimum is 120 words
+  if (len < 120) {
+    coverage = Math.round(coverage * Math.max(0.3, len / 120));
   }
   return coverage;
 }
@@ -1728,7 +1796,7 @@ function downloadMD() {
       // ---- Listening full text + answer details ----
       var listenRawMD = '';
       if (r.hasAudio && paper.listening && paper.listening.sections) {
-        listenRawMD = '\n### 听力原文\n';
+        listenRawMD = '\n### 听力题目原文\n（注：以下为试卷上的听力题目文字，非音频逐字稿。实际听力音频的逐字稿不包含在 PDF 中。）\n';
         for (var lsi = 0; lsi < paper.listening.sections.length; lsi++) {
           listenRawMD += '\n**' + paper.listening.sections[lsi].name + '**\n' + paper.listening.sections[lsi].text + '\n';
         }
