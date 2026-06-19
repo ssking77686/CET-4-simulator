@@ -11,8 +11,8 @@
 ## 界面预览
 
 <p align="center">
-  <img src="screenshot-4-results.png" alt="成绩页面 · 浅色" width="49%">
-  <img src="screenshot-5-dark.png" alt="成绩页面 · 深色" width="49%">
+  <img src="screen-import.png" alt="导入试卷" width="100%">
+  <img src="screen-exam.png" alt="答题界面" width="100%">
 </p>
 
 ## 能做什么
