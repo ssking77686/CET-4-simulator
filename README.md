@@ -10,17 +10,10 @@
 
 ## 界面预览
 
-v1.1 重新设计了整套界面。更好的顶栏、深色/浅色一键切换、成绩卡片式展示。
-
-| 导入试卷 | 答题界面 |
-|----------|----------|
-| ![导入页面](screenshot-1-import.png) | ![写作界面](screenshot-2-writing.png) |
-
-| 阅读 Section C | 成绩单 |
-|:---:|:---:|
-| ![阅读界面](screenshot-3-reading.png) | ![成绩页面](screenshot-4-results.png) |
-
-![深色模式](screenshot-5-dark.png)
+<p align="center">
+  <img src="screenshot-4-results.png" alt="成绩页面 · 浅色" width="49%">
+  <img src="screenshot-5-dark.png" alt="成绩页面 · 深色" width="49%">
+</p>
 
 ## 能做什么
 
