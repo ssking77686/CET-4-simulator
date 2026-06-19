@@ -303,11 +303,14 @@ body.dark .sc-stats { background: #1e293b; }
 <!-- ========== TOP BAR ========== -->
 <header class="topbar">
   <div class="topbar-brand">CET-4 全真模拟</div>
-  <div class="topbar-nav" id="topnav">
-    <button class="ns active" data-scr="import">1. 导入试卷</button>
-    <button class="ns" data-scr="exam">2. 答题</button>
-    <button class="ns" data-scr="results">3. 成绩</button>
-    <button class="ns" data-scr="export">4. 导出报告</button>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="topbar-nav" id="topnav">
+      <button class="ns active" data-scr="import">1. 导入试卷</button>
+      <button class="ns" data-scr="exam">2. 答题</button>
+      <button class="ns" data-scr="results">3. 成绩</button>
+      <button class="ns" data-scr="export">4. 导出报告</button>
+    </div>
+    <button class="theme-toggle" id="theme-btn" title="切换黑夜/白天模式" onclick="toggleTheme()">☀️</button>
   </div>
 </header>
 
