@@ -192,6 +192,110 @@ a { color: #2563eb; }
 .font-mono { font-family: Consolas,"Courier New",monospace; }
 hr { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
 .spoiler { background: #f1f5f9; border-radius: 4px; padding: 1px 4px; font-family: monospace; }
+
+/* ========== DARK MODE ========== */
+body.dark { background: #0f172a; color: #cbd5e1; }
+body.dark .topbar { background: #020617; border-bottom: 1px solid #1e293b; }
+body.dark .card { background: #1e293b; border-color: #334155; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+body.dark .card h2 { color: #f1f5f9; }
+body.dark .card .sub { color: #94a3b8; }
+body.dark .drop-zone { background: #1e293b; border-color: #475569; }
+body.dark .drop-zone:hover { border-color: #3b82f6; background: #1e3a5f; }
+body.dark .drop-zone .dz-title { color: #cbd5e1; }
+body.dark .drop-zone .dz-hint { color: #64748b; }
+body.dark .drop-zone.ok { background: #052e16; border-color: #166534; }
+body.dark .btn-outline { background: transparent; color: #cbd5e1; border-color: #475569; }
+body.dark .btn-outline:hover { border-color: #64748b; background: #1e293b; }
+body.dark .btn-primary { background: #3b82f6; }
+body.dark .btn-primary:hover { background: #2563eb; }
+body.dark .btn-success { background: #16a34a; }
+body.dark .sec-block { background: #1e293b; border-color: #334155; }
+body.dark .sec-block textarea { background: #0f172a; color: #cbd5e1; border-color: #334155; }
+body.dark .timer-bar { background: #1e293b; border-color: #334155; }
+body.dark .timer-bar .sec-label { color: #cbd5e1; }
+body.dark .exam-side .st { color: #64748b; }
+body.dark .exam-side .st.active { color: #f1f5f9; background: #1e293b; }
+body.dark .editor-box { background: #1e293b; border-color: #334155; }
+body.dark .editor-box .prompt { color: #cbd5e1; }
+body.dark .editor-box textarea { background: #0f172a; color: #cbd5e1; border-color: #334155; }
+body.dark .audio-bar { background: #1e293b; border-color: #334155; }
+body.dark .audio-bar .a-time { color: #94a3b8; }
+body.dark .mcq-opt { background: #1e293b; border-color: #334155; color: #cbd5e1; }
+body.dark .mcq-opt:hover { border-color: #3b82f6; background: #1e3a5f; }
+body.dark .mcq-opt.pick { border-color: #3b82f6; background: #1e3a5f; color: #93c5fd; }
+body.dark .mcq-q { color: #f1f5f9; }
+body.dark .read-tab { background: #1e293b; border-color: #334155; color: #cbd5e1; }
+body.dark .read-tab.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+body.dark .read-passage { background: #0f172a; border-color: #334155; }
+body.dark .passage-text { color: #cbd5e1; }
+body.dark .match-para { background: #1e293b; border-left-color: #475569; color: #cbd5e1; }
+body.dark .match-para:nth-child(odd) { background: #1a2332; }
+body.dark .blank { border-bottom-color: #475569; color: #cbd5e1; }
+body.dark .blank-filled { color: #93c5fd; border-bottom-color: #3b82f6; }
+body.dark .blank-sel { background: #1e3a5f; outline-color: #3b82f6; }
+body.dark .blank:hover { background: #1e3a5f; }
+body.dark .word-bank .wb { background: #1e293b; border-color: #334155; color: #cbd5e1; }
+body.dark .word-bank .wb:hover { background: #1e3a5f; border-color: #3b82f6; }
+body.dark .score-row { background: #0f172a; }
+body.dark .score-row .sr-label { color: #94a3b8; }
+body.dark .score-row .sr-val { color: #f1f5f9; }
+body.dark .no-ans { background: #1e1a05; border-color: #854d0e; }
+body.dark .no-ans h3 { color: #fbbf24; }
+body.dark .no-ans p { color: #a8a29e; }
+body.dark .err-row { background: #1c1216; }
+body.dark .q-chip.na { background: #1e293b; border-color: #334155; color: #64748b; }
+body.dark .export-card { border-color: #334155; }
+body.dark .export-card h3 { color: #f1f5f9; }
+body.dark .export-card ul { color: #94a3b8; }
+body.dark hr { border-top-color: #334155; }
+body.dark .score-ring { border-color: #334155; }
+body.dark .score-ring .sub { color: #94a3b8; }
+body.dark .editor-meta { color: #64748b; }
+body.dark .mcq-ctrl .q-idx { color: #64748b; }
+
+/* ========== DARK MODE TOGGLE ========== */
+.theme-toggle { background: none; border: 1.5px solid #475569; color: #facc15; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: .2s; flex-shrink: 0; }
+.theme-toggle:hover { border-color: #facc15; background: rgba(250,204,21,.1); }
+body.dark .theme-toggle { color: #93c5fd; border-color: #64748b; }
+body.dark .theme-toggle:hover { border-color: #93c5fd; background: rgba(147,197,253,.1); }
+
+/* ========== SCORE CARD (game-over style) ========== */
+.score-card-wrap { perspective: 800px; margin-bottom: 20px; }
+.score-card { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 16px; padding: 0; overflow: hidden; color: #f1f5f9; box-shadow: 0 8px 32px rgba(0,0,0,.25); animation: scIn .6s ease-out; }
+@keyframes scIn { from { opacity: 0; transform: translateY(24px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.sc-top { padding: 28px 28px 20px; text-align: center; }
+.sc-grade { font-size: 72px; font-weight: 900; line-height: 1; letter-spacing: -2px; }
+.sc-grade.s { color: #facc15; }
+.sc-grade.a { color: #4ade80; }
+.sc-grade.b { color: #60a5fa; }
+.sc-grade.c { color: #f59e0b; }
+.sc-grade.d { color: #f97316; }
+.sc-grade.f { color: #ef4444; }
+.sc-verdict { font-size: 18px; font-weight: 700; margin-top: -6px; }
+.sc-total { font-size: 14px; color: #94a3b8; margin-top: 4px; }
+.sc-total strong { color: #f1f5f9; font-size: 20px; }
+.sc-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #334155; }
+.sc-stat { background: #1e293b; padding: 16px 10px; text-align: center; }
+.sc-stat .scs-label { font-size: 11px; color: #94a3b8; margin-bottom: 6px; }
+.sc-stat .scs-val { font-size: 22px; font-weight: 700; }
+.sc-stat .scs-max { font-size: 10px; color: #64748b; }
+.sc-stat .scs-bar { height: 3px; background: #334155; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.sc-stat .scs-fill { height: 100%; border-radius: 2px; transition: width .6s ease-out; }
+.sc-footer { padding: 16px 28px; text-align: center; background: rgba(255,255,255,.03); border-top: 1px solid #334155; font-size: 12px; color: #64748b; }
+.sc-footer strong { color: #cbd5e1; }
+body.dark .score-card { box-shadow: 0 8px 32px rgba(0,0,0,.5); }
+body.dark .sc-stat { background: #0f172a; }
+body.dark .sc-stats { background: #1e293b; }
+
+/* ========== SCORE CARD BADGE ========== */
+.sc-badge { display: inline-block; padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 700; letter-spacing: 1px; margin-bottom: 14px; }
+.sc-badge.pass { background: rgba(74,222,128,.15); color: #4ade80; border: 1px solid rgba(74,222,128,.3); }
+.sc-badge.fail { background: rgba(239,68,68,.15); color: #ef4444; border: 1px solid rgba(239,68,68,.3); }
+
+/* ========== CONFETTI (simple CSS) ========== */
+.confetti-wrap { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; overflow: hidden; }
+.confetti-piece { position: absolute; width: 10px; height: 10px; top: -20px; animation: cfFall linear forwards; }
+@keyframes cfFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(105vh) rotate(720deg); opacity: 0; } }
 </style>
 </head>
 <body>
@@ -199,11 +303,14 @@ hr { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
 <!-- ========== TOP BAR ========== -->
 <header class="topbar">
   <div class="topbar-brand">CET-4 全真模拟</div>
-  <div class="topbar-nav" id="topnav">
-    <button class="ns active" data-scr="import">1. 导入试卷</button>
-    <button class="ns" data-scr="exam">2. 答题</button>
-    <button class="ns" data-scr="results">3. 成绩</button>
-    <button class="ns" data-scr="export">4. 导出报告</button>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="topbar-nav" id="topnav">
+      <button class="ns active" data-scr="import">1. 导入试卷</button>
+      <button class="ns" data-scr="exam">2. 答题</button>
+      <button class="ns" data-scr="results">3. 成绩</button>
+      <button class="ns" data-scr="export">4. 导出报告</button>
+    </div>
+    <button class="theme-toggle" id="theme-btn" title="切换黑夜/白天模式" onclick="toggleTheme()">☀️</button>
   </div>
 </header>
 
@@ -348,6 +455,24 @@ function goScreen(name) {
     if (order.indexOf(n) < order.indexOf(name)) b.classList.add('done');
     if (n === name) b.classList.add('active');
   });
+}
+
+// ============================================================================
+// DARK MODE
+// ============================================================================
+(function() {
+  const saved = localStorage.getItem('cet4-dark');
+  if (saved === '1' || (!saved && window.matchMedia('(prefers-color-scheme:dark)').matches)) {
+    document.body.classList.add('dark');
+    document.getElementById('theme-btn').textContent = '🌙';
+  }
+})();
+
+function toggleTheme() {
+  const btn = document.getElementById('theme-btn');
+  const isDark = document.body.classList.toggle('dark');
+  btn.textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('cet4-dark', isDark ? '1' : '0');
 }
 
 // ============================================================================
@@ -1567,10 +1692,29 @@ function renderResults() {
   const r = EXAM.results;
   const el = document.getElementById('results-body');
 
-  // Score circle
-  let level = 'bad', levelText = '未通过 (425线)';
-  if (r.total710 >= 500) { level = 'good'; levelText = '通过 (425线)'; }
-  else if (r.total710 >= 425) { level = 'ok'; levelText = '通过 (425线)'; }
+  // Grade calculation
+  let grade = 'F', gradeClass = 'f', verdict = '差距较大，需系统备考';
+  if (r.total710 >= 600) { grade = 'S'; gradeClass = 's'; verdict = '优秀！你已经远超四级通过线'; }
+  else if (r.total710 >= 530) { grade = 'A'; gradeClass = 'a'; verdict = '很不错，稳定通过没问题'; }
+  else if (r.total710 >= 470) { grade = 'B'; gradeClass = 'b'; verdict = '良好，继续保持可以冲高分'; }
+  else if (r.total710 >= 425) { grade = 'C'; gradeClass = 'c'; verdict = '刚好过线，还需要巩固薄弱项'; }
+  else if (r.total710 >= 350) { grade = 'D'; gradeClass = 'd'; verdict = '接近及格线，重点突破弱项'; }
+
+  const passed = r.total710 >= 425;
+  const badgeHTML = passed
+    ? '<span class="sc-badge pass">PASS · 通过</span>'
+    : '<span class="sc-badge fail">FAIL · 未通过</span>';
+
+  const colors = ['#3b82f6', '#16a34a', '#ea580c', '#8b5cf6'];
+  const statColors = ['#3b82f6', '#16a34a', '#ea580c', '#8b5cf6'];
+
+  // Score card sections
+  const sections = [
+    { label: '写作 Writing', score: r.w710, max: 106.5, pct: Math.round(r.w710/106.5*100), color: '#3b82f6' },
+    { label: '听力 Listening', score: r.hasAudio ? r.l710 : null, max: 248.5, pct: r.hasAudio ? Math.round(r.l710/248.5*100) : null, color: '#16a34a' },
+    { label: '阅读 Reading', score: r.r710, max: 248.5, pct: Math.round(r.r710/248.5*100), color: '#ea580c' },
+    { label: '翻译 Translation', score: r.t710, max: 106.5, pct: Math.round(r.t710/106.5*100), color: '#8b5cf6' }
+  ];
 
   // No answer key info
   let noAnsHTML = '';
@@ -1584,20 +1728,39 @@ function renderResults() {
     </div>`;
   }
 
-  el.innerHTML = noAnsHTML + `
-    ${r.hasKey ? `
-    <div class="score-hero">
-      <div class="score-ring ${level}"><div class="big">${r.total710}</div><div class="sub">/ 710</div></div>
-      <p style="font-size:15px;font-weight:700;color:${level === 'good' ? '#16a34a' : level === 'ok' ? '#ea580c' : '#dc2626'}">${level === 'good' ? '🎉 ' : ''}${levelText}</p>
-    </div>
-    <div class="score-grid">
-      <div class="score-row"><div class="sr-label">写作 Writing</div><div class="sr-val">${r.w710}<span style="font-size:11px;color:#94a3b8">/106.5</span></div><div class="sr-bar"><div class="sr-fill" style="width:${Math.round(r.w710/106.5*100)}%;background:#2563eb"></div></div></div>
-      ${r.hasAudio ? `<div class="score-row"><div class="sr-label">听力 Listening</div><div class="sr-val">${r.l710}<span style="font-size:11px;color:#94a3b8">/248.5</span></div><div class="sr-bar"><div class="sr-fill" style="width:${Math.round(r.l710/248.5*100)}%;background:#16a34a"></div></div></div>` : '<div class="score-row"><div class="sr-label">听力 Listening</div><div class="sr-val" style="color:#94a3b8">跳过</div></div>'}
-      <div class="score-row"><div class="sr-label">阅读 Reading</div><div class="sr-val">${r.r710}<span style="font-size:11px;color:#94a3b8">/248.5</span></div><div class="sr-bar"><div class="sr-fill" style="width:${Math.round(r.r710/248.5*100)}%;background:#ea580c"></div></div></div>
-      <div class="score-row"><div class="sr-label">翻译 Translation</div><div class="sr-val">${r.t710}<span style="font-size:11px;color:#94a3b8">/106.5</span></div><div class="sr-bar"><div class="sr-fill" style="width:${Math.round(r.t710/106.5*100)}%;background:#8b5cf6"></div></div></div>
-    </div>
-    ` : ''}
+  // Score card HTML (only when we have an answer key)
+  let cardHTML = '';
+  if (r.hasKey) {
+    cardHTML = `
+    <div class="score-card-wrap">
+      <div class="score-card">
+        <div class="sc-top">
+          ${badgeHTML}
+          <div class="sc-grade ${gradeClass}">${grade}</div>
+          <div class="sc-verdict">${verdict}</div>
+          <div class="sc-total">总分 <strong>${r.total710}</strong> / 710</div>
+        </div>
+        <div class="sc-stats">
+          ${sections.map((s, i) => `
+          <div class="sc-stat">
+            <div class="scs-label">${s.label}</div>
+            <div class="scs-val">${s.score !== null ? s.score : '<span style="color:#64748b">跳过</span>'}</div>
+            <div class="scs-max">/ ${s.max}</div>
+            ${s.score !== null ? `<div class="scs-bar"><div class="scs-fill" style="width:${s.pct}%;background:${s.color}"></div></div>` : ''}
+          </div>`).join('')}
+        </div>
+        <div class="sc-footer">
+          ${passed
+            ? '你已经跨过了四级的第一道门槛。分数越高，简历越好看 —— 别满足于压线。'
+            : `距 425 分及格线还差 <strong>${425 - r.total710}</strong> 分。找出最拖后腿的题型，集中突破。`}
+        </div>
+      </div>
+    </div>`;
+    // Trigger confetti if passed
+    if (passed) setTimeout(triggerConfetti, 400);
+  }
 
+  el.innerHTML = noAnsHTML + cardHTML + `
     <!-- Writing errors -->
     <hr>
     <h3 style="margin-bottom:8px">写作 · 语法检测 (15分制: ${r.writing15}分)${!r.hasKey ? ' — 以下检测结果已包含在 MD 报告中' : ''}</h3>
@@ -1632,6 +1795,26 @@ function renderResults() {
       <button class="btn btn-outline" onclick="downloadMD()">📥 下载 MD 详细报告</button>
     </div>
   `;
+}
+
+function triggerConfetti() {
+  const colors = ['#facc15','#4ade80','#60a5fa','#f472b6','#f87171','#a78bfa','#fb923c'];
+  const wrap = document.createElement('div');
+  wrap.className = 'confetti-wrap';
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDuration = (2 + Math.random() * 3) + 's';
+    p.style.animationDelay = Math.random() * 1.5 + 's';
+    p.style.width = (6 + Math.random() * 10) + 'px';
+    p.style.height = (6 + Math.random() * 10) + 'px';
+    p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    wrap.appendChild(p);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 5000);
 }
 
 function renderErrorList(errors) {
