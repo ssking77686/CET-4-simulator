@@ -272,6 +272,8 @@ body.dark .theme-toggle:hover { border-color: #93c5fd; background: rgba(147,197,
 .sc-grade.d { color: #f97316; }
 .sc-grade.f { color: #ef4444; }
 .sc-verdict { font-size: 18px; font-weight: 700; margin-top: -6px; }
+.sc-roast { font-size: 13px; color: #f87171; margin-top: 8px; font-style: italic; line-height: 1.6; }
+.sc-roast-section { font-size: 11px; color: #fbbf24; margin-top: 4px; }
 .sc-total { font-size: 14px; color: #94a3b8; margin-top: 4px; }
 .sc-total strong { color: #f1f5f9; font-size: 20px; }
 .sc-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #334155; }
@@ -1692,13 +1694,49 @@ function renderResults() {
   const r = EXAM.results;
   const el = document.getElementById('results-body');
 
-  // Grade calculation
-  let grade = 'F', gradeClass = 'f', verdict = '差距较大，需系统备考';
-  if (r.total710 >= 600) { grade = 'S'; gradeClass = 's'; verdict = '优秀！你已经远超四级通过线'; }
-  else if (r.total710 >= 530) { grade = 'A'; gradeClass = 'a'; verdict = '很不错，稳定通过没问题'; }
-  else if (r.total710 >= 470) { grade = 'B'; gradeClass = 'b'; verdict = '良好，继续保持可以冲高分'; }
-  else if (r.total710 >= 425) { grade = 'C'; gradeClass = 'c'; verdict = '刚好过线，还需要巩固薄弱项'; }
-  else if (r.total710 >= 350) { grade = 'D'; gradeClass = 'd'; verdict = '接近及格线，重点突破弱项'; }
+  // Grade + roast
+  let grade = 'F', gradeClass = 'f', verdict = '', roast = '';
+  if (r.total710 >= 600) {
+    grade = 'S'; gradeClass = 's';
+    verdict = '你是来考试的还是来进货的？';
+    roast = '别嘚瑟，六级在等着教你做人。';
+  } else if (r.total710 >= 530) {
+    grade = 'A'; gradeClass = 'a';
+    verdict = '四级拿下了。但申稍好的交换项目，这分还差点意思。';
+    roast = '考得不错——不过你确定不是运气？再做一套验证一下。';
+  } else if (r.total710 >= 470) {
+    grade = 'B'; gradeClass = 'b';
+    verdict = '过了，但别急着发票圈。这分数写在简历上「不加分」。';
+    roast = '你属于"四级过了但没人会觉得你英语好"的尴尬区间。';
+  } else if (r.total710 >= 425) {
+    grade = 'C'; gradeClass = 'c';
+    verdict = '压线飘过。你的运气比你的英语水平靠谱多了。';
+    roast = '425 过线和 424 挂掉，差距只有一道选择题。你这次站对了边，下次可不一定。';
+  } else if (r.total710 >= 350) {
+    grade = 'D'; gradeClass = 'd';
+    verdict = '就差临门一脚——但你这一脚踢在了门柱上。';
+    roast = `还差 <strong>${425 - r.total710}</strong> 分。也就是一套阅读全对的距离。问题是……你阅读对了几道来着？`;
+  } else {
+    grade = 'F'; gradeClass = 'f';
+    verdict = '阅卷老师看到你的答题卡，陷入了深深的自我怀疑。';
+    roast = '这个分数说明你至少来考试了。建议从初中英语重新来过。';
+  }
+
+  // Section-specific roast (weakest section)
+  const secs = [
+    { key: 'w', label: '写作', score: r.w710, max: 106.5 },
+    { key: 'l', label: '听力', score: r.hasAudio ? r.l710 : 999, max: 248.5 },
+    { key: 'r', label: '阅读', score: r.r710, max: 248.5 },
+    { key: 't', label: '翻译', score: r.t710, max: 106.5 }
+  ];
+  const weakest = secs.reduce((a, b) => (a.score / a.max) < (b.score / b.max) ? a : b);
+  const secRoasts = {
+    w: '你的作文，AI 都懒得帮你改。下次能凑够 120 词再说。',
+    l: '听力全错？你是在用眼睛听音频吗。',
+    r: '阅读全挂——没关系，反正以后看英文论文也用不上……哦等等，你四级还没过。',
+    t: '翻译写成这样，Google 翻译看了都摇头。'
+  };
+  const secRoast = weakest.score / weakest.max < 0.5 ? secRoasts[weakest.key] : '';
 
   const passed = r.total710 >= 425;
   const badgeHTML = passed
@@ -1738,6 +1776,7 @@ function renderResults() {
           ${badgeHTML}
           <div class="sc-grade ${gradeClass}">${grade}</div>
           <div class="sc-verdict">${verdict}</div>
+          <div class="sc-roast">🔥 ${roast}</div>
           <div class="sc-total">总分 <strong>${r.total710}</strong> / 710</div>
         </div>
         <div class="sc-stats">
@@ -1749,10 +1788,11 @@ function renderResults() {
             ${s.score !== null ? `<div class="scs-bar"><div class="scs-fill" style="width:${s.pct}%;background:${s.color}"></div></div>` : ''}
           </div>`).join('')}
         </div>
+        ${secRoast ? `<div class="sc-footer"><span class="sc-roast-section">🎯 最短板的${weakest.label}：${secRoast}</span></div>` : ''}
         <div class="sc-footer">
           ${passed
-            ? '你已经跨过了四级的第一道门槛。分数越高，简历越好看 —— 别满足于压线。'
-            : `距 425 分及格线还差 <strong>${425 - r.total710}</strong> 分。找出最拖后腿的题型，集中突破。`}
+            ? '别急着庆祝。四级只是起点，六级、考研、雅思都在排队等着。'
+            : '认清现实是进步的第一步。今天开始，每天一套真题，两周后再来。'}
         </div>
       </div>
     </div>`;
